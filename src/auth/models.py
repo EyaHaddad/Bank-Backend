@@ -12,7 +12,6 @@ class RegisterUserRequest(BaseModel):
     password: str
     confirm_password: str
 
-
 class LoginUserRequest(BaseModel):
     """Model for user login request."""
 

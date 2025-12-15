@@ -1,24 +1,23 @@
 """This module provides authentication routes for the application."""
 
 from fastapi import APIRouter, Request
-
-import src.auth.services as auth_services
-from src.auth.models import LoginUserRequest
+from starlette.status import HTTP_201_CREATED, HTTP_200_OK
+import models
+import services
 
 from ..database.core import DbSession
-from ..utils import build_response
-from .models import RegisterUserRequest
+from ..core import limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+# endpoint to register a new user
+@router.post("/", status_code=HTTP_201_CREATED)
+@limiter.limit("5/hour")
+async def register_user(request: Request, db: DbSession, register_user_request: models.RegisterUserRequest):
+    services.register_user(db, register_user_request)
+    return {"message": "User registered successfully."}
 
-@router.post("/")
-async def register_user(request: Request, db: DbSession, register_user_request: RegisterUserRequest):
-    auth_services.register_user(db, register_user_request)
-    return build_response(success=True, message="User registered successfully", status_code=201)
-
-
-@router.post("/token")
-async def login_user_access_token(form_data: LoginUserRequest, db: DbSession):
-    token = auth_services.login_user_access_token(form_data, db)
-    return build_response(success=True, message="Login successful", data=token.model_dump(), status_code=200)
+# endpoint to login a user and get an access token
+@router.post("/token", response_model=models.Token, status_code=HTTP_200_OK)
+async def login_user_access_token(form_data: models.LoginUserRequest, db: DbSession):
+    return services.login_user_access_token(form_data, db)

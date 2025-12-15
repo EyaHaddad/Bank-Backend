@@ -15,7 +15,7 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from .exceptions import AuthenticationError, DuplicateEmailError, InvalidCredentialError
-from .models import LoginUserRequest, RegisterUserRequest, TokenData, TokenResponse
+from .models import LoginUserRequest, RegisterUserRequest, TokenData, Token
 from src.models.user import User
 
 import logging
@@ -65,7 +65,7 @@ def authenticate_user(email: str, password: str, db: Session) -> User | bool:
     return user
 
 
-def create_access_token(email: str, user_id: int, expires_delta: timedelta) -> str:
+def create_access_token(email: str, user_id: UUID, expires_delta: timedelta) -> str:
     """
     Create a JWT access token.
 
@@ -89,7 +89,8 @@ def verify_token(token: str) -> TokenData:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("id")
         return TokenData(user_id=user_id)
-    except jwt.PyJWTError:
+    except PyJWTError as e:
+        logging.error(f"Token verification failed: {str(e)}")
         raise AuthenticationError()
 
 
@@ -108,9 +109,9 @@ def register_user(db: Session, register_user_request: RegisterUserRequest) -> No
             raise DuplicateEmailError(register_user_request.email)
 
         create_user_model = User(
+            first_name=register_user_request.firstname,
+            last_name=register_user_request.lastname,
             email=register_user_request.email,
-            full_name=register_user_request.full_name,
-            username=register_user_request.username,
             hashed_password=get_password_hash(register_user_request.password),
         )
         db.add(create_user_model)
@@ -127,11 +128,12 @@ def register_user(db: Session, register_user_request: RegisterUserRequest) -> No
 def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]) -> TokenData:
     return verify_token(token)
 
-
 CurrentUser = Annotated[TokenData, Depends(get_current_user)]
 
 
-def login_user_access_token(form_data: LoginUserRequest, db: Session):
+def login_user_access_token(form_data: LoginUserRequest, 
+                            db: Session)-> Token:
+    
     """
     Authenticate user and return access token.
 
@@ -140,9 +142,9 @@ def login_user_access_token(form_data: LoginUserRequest, db: Session):
     :returns: Access token and token type
     :raises InvalidCredentialError: If authentication fails
     """
-    user = authenticate_user(form_data.email, form_data.password, db)
+    user = authenticate_user(form_data.email, form_data.password, db) 
     if not user:
         raise InvalidCredentialError()
     access_token_expires = timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
     access_token = create_access_token(email=user.email, user_id=user.id, expires_delta=access_token_expires)
-    return TokenResponse(access_token=access_token, token_type="bearer")
+    return Token(access_token=access_token, token_type="bearer")

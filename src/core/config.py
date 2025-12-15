@@ -60,7 +60,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         extra="allow"
-    
+
     @property
     def db_url(self):
         return f"postgresql://postgres:Postgres%401234%21@localhost:5432/{self.DATABASE_NAME}"

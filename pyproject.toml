@@ -13,6 +13,7 @@ dependencies = [
     "passlib>=1.7.4",
     "psycopg2-binary>=2.9.11",
     "pydantic>=2.12.5",
+    "pydantic-settings>=2.12.0",
     "pyotp>=2.9.0",
     "pypass>=0.2.1",
     "pytest>=9.0.2",
