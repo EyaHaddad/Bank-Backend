@@ -11,9 +11,11 @@ import logging
 import time
 from fastapi.security import OAuth2PasswordBearer
 
+from .users import controller
+
 
 from .core.config import settings
-from .api import auth, users, accounts, transactions
+from .api import auth, accounts, transactions
 from .database.core import engine, Base
 
 # Configure logging
@@ -95,7 +97,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(controller.router, prefix="/api/users", tags=["Users"])
 app.include_router(accounts.router, prefix="/api/accounts", tags=["Accounts"])
 app.include_router(transactions.router, prefix="/api/transactions", tags=["Transactions"])
 

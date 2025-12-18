@@ -5,12 +5,12 @@ from datetime import datetime, timedelta
 import secrets
 import string
 
-from .database.core import get_db
-from .entities.user import User
-from .core.security import hash_password, verify_password
-from .core.jwt import create_access_token
-from .utils.validators import validate_password
-from .core.limiter import limiter
+from src.database.core import get_db
+from src.entities.user import User
+from src.core.security import hash_password, verify_password
+from src.core.jwt import create_access_token
+from src.utils.validators import validate_password
+from src.core.limiter import limiter
 
 router = APIRouter()
 

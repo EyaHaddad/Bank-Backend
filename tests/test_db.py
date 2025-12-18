@@ -1,9 +1,10 @@
-"Unit test module for the database connection and basic operations."
+"""Unit test module for the database connection and basic operations."""
 
 from sqlalchemy import StaticPool, create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-from src.models.base import BaseEntity
+# Create a separate Base for testing to avoid importing production database
+TestBase = declarative_base()
 
 # Setup the in-memory SQLite database for testing
 # This is a test database, it doesn't use the production database
@@ -16,4 +17,3 @@ engine = create_engine(
     poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-BaseEntity.metadata.create_all(bind=engine)

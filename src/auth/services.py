@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from .exceptions import AuthenticationError, DuplicateEmailError, InvalidCredentialError
 from .models import LoginUserRequest, RegisterUserRequest, TokenData, Token
-from src.models.user import User
+from src.entities.user import User
 
 import logging
 

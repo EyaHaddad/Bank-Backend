@@ -3,7 +3,7 @@
 
 from sqlalchemy.orm import Session
 
-from ..models import User
+from ..entities.user import User
 
 
 class UserService:
