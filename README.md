@@ -126,53 +126,6 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 Ou avec le script du projet (si disponible) :
 ```bash
 uv run python src/main.py
-## 📁 Structure du projet
-
-```
-backend/
-├── src/
-│   ├── main.py                 # Point d'entrée de l'application
-│   ├── api/                    # Endpoints API
-│   │   ├── accounts.py         # Gestion des comptes
-│   │   ├── auth.py             # Authentification
-│   │   ├── transactions.py     # Transactions
-│   │   ├── users.py            # Utilisateurs
-│   │   └── deps.py             # Dépendances partagées
-│   ├── auth/                   # Logique d'authentification
-│   │   ├── controllers.py      # Contrôleurs
-│   │   ├── services.py         # Services d'auth
-│   │   ├── models.py           # Modèles d'auth
-│   │   └── exceptions.py       # Exceptions d'auth
-│   ├── core/                   # Configuration centrale
-│   │   ├── config.py           # Variables de configuration
-│   │   ├── security.py         # Fonctions de sécurité
-│   │   ├── jwt.py              # Gestion JWT
-│   │   ├── dependencies.py     # Dépendances FastAPI
-│   │   ├── limiter.py          # Rate limiting
-│   │   └── logging.py          # Configuration logging
-│   ├── database/               # Accès base de données
-│   │   ├── core.py             # Connexion DB
-│   │   └── reset.py            # Scripts de réinitialisation
-│   ├── models/                 # Modèles de données
-│   │   ├── user.py             # Modèle Utilisateur
-│   │   ├── account.py          # Modèle Compte
-│   │   ├── transaction.py      # Modèle Transaction
-│   │   ├── beneficiary.py      # Modèle Bénéficiaire
-│   │   └── base.py             # Modèle de base
-│   ├── services/               # Logique métier
-│   │   ├── user_services.py    # Services utilisateur
-│   │   ├── email.py            # Service email
-│   │   └── otp.py              # Service OTP
-│   └── utils/                  # Utilitaires
-│       └── validators.py       # Validateurs personnalisés
-├── tests/
-│   ├── __init__.py
-│   └── test_db.py              # Tests base de données
-├── requirements.txt            # Dépendances de production
-├── requirements-dev.txt        # Dépendances de développement
-├── pyproject.toml              # Configuration du projet
-└── README.md                   # Ce fichier
-```
 
 ## 🔌 API Endpoints
 
