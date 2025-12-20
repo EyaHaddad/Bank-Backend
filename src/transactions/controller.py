@@ -1,69 +1,31 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user
-from app.db.session import get_db
-from app.db.models import User
-
-from app.db.schema import SessionLocal
-from app.models.user import UserCreate, UserRead
-from app.services.user_service import UserService
-from database.core import DbSession
+from src.core.dependencies import get_current_user
+from src.database.core import get_db
+from src.entities.user import User
+from src.entities.transaction import Transaction
 
 router = APIRouter()
 
-@router.get("/me")
-def get_profile(
+@router.post("/transfer")
+def transfer(
+    account_id: int,
+    beneficiary_account: str,
+    amount: float,
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-    return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "phone": current_user.phone,
-    }
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Invalid amount")
 
-def get_user_service(db: DbSession) -> UserService:
-    """
-    Dependency that creates a UserService
-    using the same database session.
-    """
-    return UserService(db)
+    tx = Transaction(
+        user_id=current_user.id,
+        account_id=account_id,
+        beneficiary_account=beneficiary_account,
+        amount=amount,
+    )
+    db.add(tx)
+    db.commit()
 
-@router.get("/users", response_model=list[UserRead])
-def get_users(service: UserService = Depends(get_user_service)):
-    """
-    API endpoint that lists users.
-    The database session is injected automatically.
-    """
-    return service.list_users()
-
-
-@router.post("/users", response_model=UserRead)
-def create_user(user: UserCreate, service: UserService = Depends(get_user_service)):
-    return service.create_user(user.name)
-
-
-@router.get("/users/{user_id}", response_model=UserRead)
-def get_user(user_id: int, service: UserService = Depends(get_user_service)):
-    user = service.get_user(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
-
-@router.put("/users/{user_id}", response_model=UserRead)
-def update_user(
-    user_id: int, user: UserCreate, service: UserService = Depends(get_user_service)
-):
-    updated = service.update_user(user_id, user.name)
-    if not updated:
-        raise HTTPException(status_code=404, detail="User not found")
-    return updated
-
-
-@router.delete("/users/{user_id}")
-def delete_user(user_id: int, service: UserService = Depends(get_user_service)):
-    success = service.delete_user(user_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="User not found")
-    return {"success": True}
+    return {"message": "Transfer successful"}
