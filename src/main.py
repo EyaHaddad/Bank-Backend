@@ -10,12 +10,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 import logging
 import time
 from fastapi.security import OAuth2PasswordBearer
-
-from .users.controller import router as users_router
-from .auth.controllers import router as auth_router
-from .accounts.controller import router as accounts_router
-from .transactions.controller import router as transactions_router
-
+from src.api import register_routes
 from .core.config import settings
 from .database.core import engine, Base
 
@@ -94,10 +89,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # Include routers
-app.include_router(auth_router, prefix="/api", tags=["Authentication"])
-app.include_router(users_router, prefix="/api", tags=["Users"])
-app.include_router(accounts_router, prefix="/api", tags=["Accounts"])
-app.include_router(transactions_router, prefix="/api", tags=["Transactions"])
+register_routes(app)
 
 @app.get("/")
 async def root():

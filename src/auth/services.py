@@ -59,7 +59,7 @@ def authenticate_user(email: str, password: str, db: Session) -> User | bool:
     :returns: The authenticated user
     """
     user = db.query(User).filter(User.email == email).first()
-    if not user or not verify_password(password, user.hashed_password):
+    if not user or not verify_password(password, user.password_hash):
         logging.warning(f"Failed authentication attempt for user {email}")
         return False
     return user
@@ -109,10 +109,10 @@ def register_user(db: Session, register_user_request: RegisterUserRequest) -> No
             raise DuplicateEmailError(register_user_request.email)
 
         create_user_model = User(
-            first_name=register_user_request.firstname,
-            last_name=register_user_request.lastname,
+            firstname=register_user_request.first_name,
+            lastname=register_user_request.last_name,
             email=register_user_request.email,
-            hashed_password=get_password_hash(register_user_request.password),
+            password_hash=get_password_hash(register_user_request.password),
         )
         db.add(create_user_model)
         db.commit()

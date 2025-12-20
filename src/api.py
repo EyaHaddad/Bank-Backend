@@ -5,7 +5,8 @@ from src.users.controller import router as users_router
 from src.transactions.controller import router as transactions_router
 
 def register_routes(app: FastAPI):
-    app.include_router(accounts_router)
-    app.include_router(auth_router)
-    app.include_router(users_router)
-    app.include_router(transactions_router)
+    """Register all API routes with /api prefix."""
+    app.include_router(accounts_router, prefix="/api")
+    app.include_router(auth_router, prefix="/api")
+    app.include_router(users_router, prefix="/api")
+    app.include_router(transactions_router, prefix="/api")
