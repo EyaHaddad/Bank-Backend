@@ -3,11 +3,11 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.database.core import Base
-from src.entities.user import User
-from src.auth.models import TokenData
-from src.auth.services import get_password_hash
-from src.core.limiter import limiter
+from src.infrastructure.database import Base
+from src.models.user import User
+from src.modules.auth.schemas import TokenData
+from src.modules.auth.service import get_password_hash
+from src.infrastructure.security import limiter
 
 
 @pytest.fixture(scope="function")
@@ -46,7 +46,7 @@ def test_token_data():
 @pytest.fixture(scope="function")
 def client(db_session):
     from src.main import app
-    from src.database.core import get_db
+    from src.infrastructure.database import get_db
     
     # Disable rate limiting for tests
     limiter.reset()

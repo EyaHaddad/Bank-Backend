@@ -36,14 +36,95 @@ Backend d'une application bancaire sécurisée développée en **FastAPI**, offr
 - **Package Manager** : uv (ultra-rapide)
 - **Runtime** : Python 3.12+
 
-### Couches de l'application
+### Architecture Clean
+
+Le projet suit une **Clean Architecture** avec une séparation claire des responsabilités :
+
 ```
-API Layer (routes) → Services Layer → Database Layer
-        ↓
-    Auth & Security
-    Config & Dependencies
-    Logging & Monitoring
+src/
+├── main.py                      # Point d'entrée de l'application
+├── app/                         # Configuration de l'application
+│   ├── __init__.py
+│   └── routes.py                # Enregistrement des routes API
+│
+├── config/                      # Configuration centralisée
+│   ├── __init__.py
+│   ├── settings.py              # Variables d'environnement et settings
+│   └── logging.py               # Configuration du logging
+│
+├── infrastructure/              # Couche infrastructure (technique)
+│   ├── database/                # Configuration base de données
+│   │   ├── __init__.py
+│   │   ├── session.py           # Engine, SessionLocal, get_db
+│   │   └── reset.py             # Script de réinitialisation DB
+│   ├── security/                # Utilitaires de sécurité
+│   │   ├── __init__.py
+│   │   ├── jwt.py               # Création/vérification tokens JWT
+│   │   ├── hashing.py           # Hashage des mots de passe (bcrypt)
+│   │   └── rate_limiter.py      # Limitation de requêtes
+│   └── external/                # Services externes
+│       ├── __init__.py
+│       ├── email.py             # Service d'envoi d'emails
+│       └── otp.py               # Génération/vérification OTP
+│
+├── common/                      # Utilitaires partagés
+│   ├── __init__.py
+│   ├── dependencies.py          # Dépendances FastAPI (get_current_user)
+│   ├── validators.py            # Validateurs communs
+│   └── exceptions.py            # Exceptions de base
+│
+├── models/                      # Entités SQLAlchemy (ORM)
+│   ├── __init__.py
+│   ├── base.py                  # Classe de base avec timestamps
+│   ├── user.py                  # Modèle User
+│   ├── account.py               # Modèle Account
+│   ├── transaction.py           # Modèle Transaction
+│   ├── beneficiary.py           # Modèle Beneficiary
+│   └── otp.py                   # Modèle OTP
+│
+└── modules/                     # Modules métier (feature-based)
+    ├── auth/                    # Module d'authentification
+    │   ├── __init__.py
+    │   ├── router.py            # Endpoints API (/api/auth/*)
+    │   ├── schemas.py           # Schémas Pydantic (request/response)
+    │   ├── service.py           # Logique métier
+    │   └── exceptions.py        # Exceptions spécifiques
+    ├── users/                   # Module utilisateurs
+    │   ├── __init__.py
+    │   ├── router.py            # Endpoints API (/api/users/*)
+    │   ├── schemas.py           # Schémas Pydantic
+    │   └── service.py           # Logique métier
+    ├── accounts/                # Module comptes bancaires
+    │   ├── __init__.py
+    │   ├── router.py            # Endpoints API (/api/accounts/*)
+    │   ├── schemas.py           # Schémas Pydantic
+    │   ├── service.py           # Logique métier
+    │   └── exceptions.py        # Exceptions spécifiques
+    └── transactions/            # Module transactions
+        ├── __init__.py
+        ├── router.py            # Endpoints API (/api/transactions/*)
+        ├── schemas.py           # Schémas Pydantic
+        └── service.py           # Logique métier
 ```
+
+### Principes de l'architecture
+
+| Couche | Responsabilité | Exemples |
+|--------|----------------|----------|
+| **config/** | Configuration centralisée | Settings, logging |
+| **infrastructure/** | Préoccupations techniques | DB, sécurité, services externes |
+| **common/** | Code partagé | Dépendances, validateurs |
+| **models/** | Entités de persistance | SQLAlchemy models |
+| **modules/** | Logique métier par feature | Auth, Users, Accounts |
+
+### Conventions de nommage
+
+| Ancien nom | Nouveau nom | Raison |
+|------------|-------------|--------|
+| `controller.py` | `router.py` | Convention FastAPI |
+| `models.py` (Pydantic) | `schemas.py` | Distinguer des models SQLAlchemy |
+| `entities/` | `models/` | Nommage conventionnel |
+| `services/` (externe) | `infrastructure/external/` | Séparation infrastructure |
 
 ## 📦 Prérequis
 
@@ -75,7 +156,7 @@ Cette commande crée automatiquement un environnement virtuel et installe toutes
 
 ### 4. Initialiser la base de données
 ```bash
-python -m src.database.reset
+python -m src.infrastructure.database.reset
 ```
 
 ## ⚙️ Configuration
@@ -108,7 +189,7 @@ ALLOWED_ORIGINS=["http://localhost:3000"]
 LOG_LEVEL=INFO
 ```
 
-Voir [src/core/config.py](src/core/config.py) pour plus de détails.
+Voir [src/config/settings.py](src/config/settings.py) pour plus de détails.
 
 ## 📖 Utilisation
 
@@ -170,7 +251,7 @@ uv run python src/main.py
 4. Les endpoints protégés valident le token
 5. Token expire après un délai configurable (par défaut 30 minutes)
 
-Voir [src/core/jwt.py](src/core/jwt.py) et [src/auth/services.py](src/auth/services.py) pour les détails.
+Voir [src/infrastructure/security/jwt.py](src/infrastructure/security/jwt.py) et [src/modules/auth/service.py](src/modules/auth/service.py) pour les détails.
 
 ### OTP (One-Time Password)
 - Utilisé pour les opérations sensibles (virements, modifications sécurité)

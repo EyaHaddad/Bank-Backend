@@ -4,15 +4,12 @@ Main application file for the FastAPI backend.
 
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
 import logging
-import time
 from fastapi.security import OAuth2PasswordBearer
-from src.api import register_routes
-from .core.config import settings
-from .database.core import engine, Base
+from src.app.routes import register_routes
+from src.config import settings
+from src.infrastructure.database import engine, Base
+from src.infrastructure.middleware import setup_middleware
 
 # Configure logging
 logging.basicConfig(
@@ -32,51 +29,9 @@ app = FastAPI(
     openapi_url="/api/openapi.json" if settings.DEBUG else None,
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
-# Security Middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
-    max_age=3600,
-)
 
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=settings.ALLOWED_HOSTS
-)
-
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-
-# Request timing middleware
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    start_time = time.time()
-    response = await call_next(request)
-    process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    return response
-# Security headers middleware
-@app.middleware("http")
-async def add_security_headers(request: Request, call_next):
-    response = await call_next(request)
-
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-XSS-Protection"] = "1; mode=block"
-
-    if settings.DEBUG:
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self' https://cdn.jsdelivr.net; "
-            "script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
-            "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
-            "img-src 'self' data: https://cdn.jsdelivr.net;"
-        )
-    else:
-        response.headers["Content-Security-Policy"] = "default-src 'self'"
-
-    return response
+# Configure all middleware (CORS, TrustedHost, GZip, Security)
+setup_middleware(app)
 
 
 # Global exception handler

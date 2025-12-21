@@ -16,7 +16,7 @@ from uuid import uuid4
 
 from tests.test_db import engine, TestingSessionLocal
 from src.main import app
-from src.database.core import get_db, Base
+from src.infrastructure.database import get_db, Base
 
 
 # ============================================================================
@@ -35,10 +35,10 @@ def override_get_db():
 @pytest.fixture(scope="module", autouse=True)
 def setup_test_db():
     """Create test database tables before tests and clean up after."""
-    from src.entities.user import User
-    from src.entities.account import Account
-    from src.entities.transaction import Transaction
-    from src.entities.beneficiary import Beneficiary
+    from src.models.user import User
+    from src.models.account import Account
+    from src.models.transaction import Transaction
+    from src.models.beneficiary import Beneficiary
     
     Base.metadata.create_all(bind=engine)
     yield

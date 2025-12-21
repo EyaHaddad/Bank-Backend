@@ -16,11 +16,11 @@ os.environ["ALLOWED_HOSTS"] = '["localhost", "127.0.0.1", "testserver"]'
 from sqlalchemy import StaticPool, create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.auth import services as auth_service
-from src.auth.models import RegisterUserRequest, LoginUserRequest
-from src.auth.exceptions import AuthenticationError, InvalidCredentialError, DuplicateEmailError
-from src.entities.user import User
-from src.database.core import Base
+from src.modules.auth import service as auth_service
+from src.modules.auth.schemas import RegisterUserRequest, LoginUserRequest
+from src.modules.auth.exceptions import AuthenticationError, InvalidCredentialError, DuplicateEmailError
+from src.models.user import User
+from src.infrastructure.database import Base
 
 
 # ============================================================================
@@ -40,10 +40,10 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 def db_session():
     """Create a fresh database session for each test."""
     # Import all entities to register them
-    from src.entities.user import User
-    from src.entities.account import Account
-    from src.entities.transaction import Transaction
-    from src.entities.beneficiary import Beneficiary
+    from src.models.user import User
+    from src.models.account import Account
+    from src.models.transaction import Transaction
+    from src.models.beneficiary import Beneficiary
     
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
