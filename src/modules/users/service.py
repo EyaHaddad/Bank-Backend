@@ -101,7 +101,7 @@ class UserService:
         return True
 
     def change_password(self, user_id: UUID, password_data: schemas.PasswordChange) -> None:
-        """Change a user's password."""
+        """Change a user's password and send notification."""
         if password_data.new_password != password_data.new_password_confirm:
             raise PasswordMismatchError()
 
@@ -113,3 +113,11 @@ class UserService:
         user.password_hash = get_password_hash(password_data.new_password)
         self._db.commit()
         logger.info(f"Successfully changed password for user with ID: {user_id}")
+        
+        # Send password change notification (lazy import to avoid circular imports)
+        try:
+            from src.modules.notifications.service import send_password_change_notification_helper
+            send_password_change_notification_helper(self._db, user_id)
+            logger.info(f"Password change notification sent to user {user_id}")
+        except Exception as e:
+            logger.error(f"Failed to send password change notification: {str(e)}")

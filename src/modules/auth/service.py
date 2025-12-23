@@ -10,14 +10,15 @@ from jwt import PyJWTError
 
 from src.config import settings
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from .exceptions import AuthenticationError, DuplicateEmailError, InvalidCredentialError
-from .schemas import LoginUserRequest, RegisterUserRequest, TokenData, Token
+from .schemas import RegisterUserRequest, TokenData, Token
 from src.models.user import User
+from src.models.otp import OTPPurpose
 
 import logging
 
@@ -61,9 +62,9 @@ def authenticate_user(email: str, password: str, db: Session) -> User | bool:
     return user
 
 
-def create_access_token(email: str, user_id: UUID, expires_delta: timedelta) -> str:
+def create_access_token(email: str, user_id: UUID, role: str, expires_delta: timedelta) -> str:
     """Create a JWT access token."""
-    encode = {"sub": email, "id": str(user_id), "exp": datetime.now(timezone.utc) + expires_delta}
+    encode = {"sub": email, "id": str(user_id), "role": role, "exp": datetime.now(timezone.utc) + expires_delta}
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -72,14 +73,19 @@ def verify_token(token: str) -> TokenData:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("id")
-        return TokenData(user_id=user_id)
+        role: str = payload.get("role")
+        return TokenData(user_id=user_id, role=role)
     except PyJWTError as e:
         logging.error(f"Token verification failed: {str(e)}")
         raise AuthenticationError()
 
 
-def register_user(db: Session, register_user_request: RegisterUserRequest) -> None:
-    """Register a new user."""
+def register_user(db: Session, register_user_request: RegisterUserRequest) -> User:
+    """Register a new user and send welcome + verification emails."""
+    # Import here to avoid circular imports
+    from src.modules.notifications.service import send_welcome_notification_helper
+    from src.modules.otps.service import OTPService
+    
     try:
         existing_user = db.query(User).filter(User.email == register_user_request.email).first()
         if existing_user:
@@ -97,6 +103,29 @@ def register_user(db: Session, register_user_request: RegisterUserRequest) -> No
         )
         db.add(create_user_model)
         db.commit()
+        db.refresh(create_user_model)
+        
+        # Send welcome notification
+        try:
+            send_welcome_notification_helper(db, create_user_model.id)
+            logging.info(f"Welcome notification sent to user {create_user_model.id}")
+        except Exception as e:
+            logging.error(f"Failed to send welcome notification: {str(e)}")
+        
+        # Generate and send email verification OTP
+        try:
+            otp_service = OTPService(db)
+            otp_service.create_otp(
+                user_id=create_user_model.id,
+                purpose=OTPPurpose.EMAIL_VERIFICATION,
+                max_attempts=3,
+                send_notification=True  # This will send the email verification notification
+            )
+            logging.info(f"Email verification OTP sent to user {create_user_model.id}")
+        except Exception as e:
+            logging.error(f"Failed to send email verification OTP: {str(e)}")
+        
+        return create_user_model
 
     except DuplicateEmailError:
         raise
@@ -109,14 +138,38 @@ def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]) -> TokenData
     return verify_token(token)
 
 
+def require_admin(current_user: TokenData) -> TokenData:
+    """Verify that the current user has admin role."""
+    if not current_user.is_admin():
+        from fastapi import HTTPException
+        from starlette.status import HTTP_403_FORBIDDEN
+        logging.warning(f"Non-admin user {current_user.user_id} attempted admin action")
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="Admin access required."
+        )
+    return current_user
+
+
+def get_admin_user(token: Annotated[str, Depends(oauth2_bearer)]) -> TokenData:
+    """Get current user from token and verify admin role."""
+    current_user = verify_token(token)
+    return require_admin(current_user)
+
+
 CurrentUser = Annotated[TokenData, Depends(get_current_user)]
+AdminUser = Annotated[TokenData, Depends(get_admin_user)]
 
 
-def login_user_access_token(form_data: LoginUserRequest, db: Session) -> Token:
-    """Authenticate user and return access token."""
-    user = authenticate_user(form_data.email, form_data.password, db)
+def login_user_access_token(form_data: OAuth2PasswordRequestForm, db: Session) -> Token:
+    """Authenticate user and return access token.
+    
+    Note: OAuth2PasswordRequestForm uses 'username' field, which we use for email.
+    """
+    # OAuth2 spec uses 'username', we use email as the username
+    user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise InvalidCredentialError()
     access_token_expires = timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
-    access_token = create_access_token(email=user.email, user_id=user.id, expires_delta=access_token_expires)
-    return Token(access_token=access_token, token_type="bearer")
+    access_token = create_access_token(email=user.email, user_id=user.id, role=user.role.value, expires_delta=access_token_expires)
+    return Token(access_token=access_token, token_type="bearer", role=user.role.value)

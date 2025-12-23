@@ -1,11 +1,16 @@
 """User entity module."""
 
-from sqlalchemy import Column, String, DateTime, Boolean
+from sqlalchemy import Column, String, DateTime, Boolean, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from .base import BaseEntity
+from enum import Enum as PyEnum
 
+class Role(str, PyEnum):
+    """User roles in the system."""
+    ADMIN = "admin"
+    USER = "user"
 
 class User(BaseEntity):
     """User entity representing a user in the system."""
@@ -19,6 +24,7 @@ class User(BaseEntity):
     phone = Column(String, unique=True, index=True, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     password_hash = Column(String, nullable=False)
+    role = Column(Enum(Role), default=Role.USER, nullable=False )
 
     # Relationships
     accounts = relationship("Account", back_populates="user", cascade="all, delete-orphan")

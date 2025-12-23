@@ -73,8 +73,8 @@ class OTPService:
         logger.warning(f"OTP {otp.id} verification failed - invalid code")
         return False
 
-    def create_otp(self, user_id: UUID, purpose: OTPPurpose, max_attempts: int = 3) -> OTP:
-        """Create a new OTP for a user."""
+    def create_otp(self, user_id: UUID, purpose: OTPPurpose, max_attempts: int = 3, send_notification: bool = True) -> OTP:
+        """Create a new OTP for a user and optionally send notification."""
         logger.info(f"Creating OTP for user {user_id} with purpose {purpose}")
         
         # Invalidate any existing unused OTPs for the same purpose
@@ -96,7 +96,40 @@ class OTPService:
         self._db.refresh(otp)
         
         logger.info(f"OTP created with ID: {otp.id}")
+        
+        # Send email notification based on purpose
+        if send_notification:
+            self._send_otp_notification(user_id, code, purpose)
+        
         return otp
+
+    def _send_otp_notification(self, user_id: UUID, otp_code: str, purpose: OTPPurpose) -> None:
+        """Send email notification for OTP based on its purpose."""
+        # Import here to avoid circular imports
+        from src.modules.notifications.service import (
+            send_otp_notification_helper,
+            send_email_verification_notification_helper,
+            send_login_otp_notification_helper,
+            send_transaction_otp_notification_helper,
+            send_password_reset_otp_notification_helper,
+        )
+        
+        try:
+            if purpose == OTPPurpose.EMAIL_VERIFICATION:
+                send_email_verification_notification_helper(self._db, user_id, otp_code)
+            elif purpose == OTPPurpose.LOGIN:
+                send_login_otp_notification_helper(self._db, user_id, otp_code)
+            elif purpose == OTPPurpose.TRANSACTION:
+                send_transaction_otp_notification_helper(self._db, user_id, otp_code)
+            elif purpose == OTPPurpose.PASSWORD_RESET:
+                send_password_reset_otp_notification_helper(self._db, user_id, otp_code)
+            else:
+                # For other purposes (PHONE_VERIFICATION, ACCOUNT_ACTIVATION), use generic OTP notification
+                send_otp_notification_helper(self._db, user_id, otp_code)
+            logger.info(f"OTP notification sent for purpose {purpose} to user {user_id}")
+        except Exception as e:
+            # Log error but don't fail OTP creation
+            logger.error(f"Failed to send OTP notification for user {user_id}: {str(e)}")
 
     def generate_otp_response(self, user_id: UUID, purpose: OTPPurpose, max_attempts: int = 3) -> OTPGenerateResponse:
         """Create a new OTP and return a response schema."""

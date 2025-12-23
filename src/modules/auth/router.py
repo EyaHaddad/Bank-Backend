@@ -1,6 +1,7 @@
 """Authentication router - API endpoints for auth operations."""
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
+from fastapi.security import OAuth2PasswordRequestForm
 from starlette.status import HTTP_201_CREATED, HTTP_200_OK
 
 from . import schemas
@@ -26,8 +27,8 @@ async def register_user(
 
 @router.post("/token", response_model=schemas.Token, status_code=HTTP_200_OK)
 async def login_user_access_token(
-    form_data: schemas.LoginUserRequest,
-    db: DbSession
+    db: DbSession,
+    form_data: OAuth2PasswordRequestForm = Depends(),
 ):
-    """Login and get an access token."""
+    """Login and get an access token. Use email as username."""
     return service.login_user_access_token(form_data, db)

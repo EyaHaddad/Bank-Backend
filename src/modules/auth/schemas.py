@@ -23,14 +23,20 @@ class Token(BaseModel):
     """Model for token response."""
     access_token: str
     token_type: str = "bearer"
+    role: str
 
 
 class TokenData(BaseModel):
     """Model for token data."""
     user_id: str | None = None
+    role: str | None = None
 
     def get_uuid(self) -> UUID | None:
         """Convert user_id string to UUID object."""
         if self.user_id:
             return UUID(self.user_id)
         return None
+
+    def is_admin(self) -> bool:
+        """Check if the user has admin role."""
+        return self.role == "admin"

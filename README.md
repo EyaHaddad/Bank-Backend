@@ -193,13 +193,13 @@ Voir [src/config/settings.py](src/config/settings.py) pour plus de détails.
 
 ### Démarrer le serveur
 ```bash
-uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+uv run python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Accéder à la documentation interactive
 - **Swagger UI** : http://localhost:8000/docs
 - **ReDoc** : http://localhost:8000/redoc
- run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+ uv run python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Ou avec le script du projet (si disponible) :

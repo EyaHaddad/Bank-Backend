@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, status
 from src.infrastructure.database import DbSession
 from . import schemas
 from .service import UserService
-from src.modules.auth import CurrentUser
+from src.modules.auth import CurrentUser, AdminUser
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +32,10 @@ def get_current_user(
 
 @router.get("/", response_model=list[schemas.UserResponseModel])
 def get_users(
+    current_user: AdminUser,
     service: UserService = Depends(get_user_service)
 ) -> list[schemas.UserResponseModel]:
-    """Get all users in the system."""
+    """Get all users in the system. Admin only."""
     logger.debug("Fetching all users")
     return service.list_users()
 
@@ -42,9 +43,10 @@ def get_users(
 @router.post("/", response_model=schemas.UserResponseModel, status_code=status.HTTP_201_CREATED)
 def create_user(
     user: schemas.UserCreate,
+    current_user: AdminUser,
     service: UserService = Depends(get_user_service)
 ) -> schemas.UserResponseModel:
-    """Create a new user."""
+    """Create a new user. Admin only."""
     logger.info(f"Creating new user with email: {user.email}")
     return service.create_user(user)
 
@@ -52,9 +54,10 @@ def create_user(
 @router.get("/{user_id}", response_model=schemas.UserResponseModel)
 def get_user(
     user_id: UUID,
+    current_user: AdminUser,
     service: UserService = Depends(get_user_service)
 ) -> schemas.UserResponseModel:
-    """Get a specific user by ID."""
+    """Get a specific user by ID. Admin only."""
     logger.debug(f"Fetching user with ID: {user_id}")
     return service.get_user_by_id(user_id)
 
@@ -66,7 +69,11 @@ def update_user(
     current_user: CurrentUser,
     service: UserService = Depends(get_user_service)
 ) -> schemas.UserResponseModel:
-    """Update a user's profile."""
+    """Update a user's profile. Users can only update their own profile."""
+    # Users can only update their own profile unless they're admin
+    if str(user_id) != current_user.user_id and not current_user.is_admin():
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="You can only update your own profile")
     logger.info(f"Updating user with ID: {user_id}")
     return service.update_user(user_id, user_data)
 
@@ -74,10 +81,10 @@ def update_user(
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(
     user_id: UUID,
-    current_user: CurrentUser,
+    current_user: AdminUser,
     service: UserService = Depends(get_user_service)
 ):
-    """Delete a user."""
+    """Delete a user. Admin only."""
     logger.info(f"Deleting user with ID: {user_id}")
     service.delete_user(user_id)
 
@@ -89,7 +96,11 @@ def change_password(
     current_user: CurrentUser,
     service: UserService = Depends(get_user_service)
 ):
-    """Change a user's password."""
+    """Change a user's password. Users can only change their own password."""
+    # Users can only change their own password
+    if str(user_id) != current_user.user_id:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="You can only change your own password")
     logger.info(f"Changing password for user with ID: {user_id}")
     service.change_password(user_id, password_data)
     return {"message": "Password changed successfully"}
