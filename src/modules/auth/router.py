@@ -7,13 +7,13 @@ from . import schemas
 from . import service
 
 from src.infrastructure.database import DbSession
-from src.infrastructure.security import limiter
+from src.infrastructure.security.rate_limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/", status_code=HTTP_201_CREATED)
-@limiter.limit("5/hour")
+@limiter.limit("5/minute")
 async def register_user(
     request: Request,
     db: DbSession,

@@ -1,4 +1,5 @@
 """Authentication Services."""
+import re
 
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
@@ -23,20 +24,33 @@ import logging
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+MAX_BCRYPT_BYTES = settings.MAX_BCRYPT_BYTES
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+def validate_password(password: str) -> bool:
+    """Validate password strength."""
+    return (
+        len(password) >= 12 and
+        re.search(r"[A-Z]", password) and
+        re.search(r"[a-z]", password) and
+        re.search(r"\d", password) and
+        re.search(r"[!@#$%^&*()]", password)
+    )
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed password."""
-    return bcrypt_context.verify(plain_password, hashed_password)
-
+    plain_bytes = plain_password.encode("utf-8")[:MAX_BCRYPT_BYTES]
+    return bcrypt_context.verify( plain_bytes.decode("utf-8", errors="ignore"),
+        hashed_password)
 
 def get_password_hash(password: str) -> str:
     """Hash a password."""
-    return bcrypt_context.hash(password)
-
+    # bcrypt requires <= 72 bytes
+    password_bytes = password.encode("utf-8")
+    safe_password = password_bytes[:MAX_BCRYPT_BYTES]
+    return bcrypt_context.hash(safe_password.decode("utf-8", errors="ignore"))
 
 def authenticate_user(email: str, password: str, db: Session) -> User | bool:
     """Authenticate a user by their email and password."""
@@ -70,7 +84,11 @@ def register_user(db: Session, register_user_request: RegisterUserRequest) -> No
         existing_user = db.query(User).filter(User.email == register_user_request.email).first()
         if existing_user:
             raise DuplicateEmailError(register_user_request.email)
-
+        #validate the password strength
+        if not validate_password(register_user_request.password):
+            raise AuthenticationError("Password does not meet strength requirements.")
+        
+        #create the user
         create_user_model = User(
             firstname=register_user_request.first_name,
             lastname=register_user_request.last_name,

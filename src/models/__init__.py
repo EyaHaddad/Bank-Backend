@@ -6,6 +6,8 @@ from .account import Account, AccountStatus
 from .transaction import Transaction, TransactionType, TransactionStatus
 from .beneficiary import Beneficiary
 from .otp import OTP, OTPPurpose
+from .notification import Notification, NotificationType
+from .transfer import Transfer, TransferStatus
 
 __all__ = [
     "BaseEntity",
@@ -18,4 +20,8 @@ __all__ = [
     "Beneficiary",
     "OTP",
     "OTPPurpose",
+    "Notification",
+    "NotificationType",
+    "Transfer",
+    "TransferStatus",
 ]

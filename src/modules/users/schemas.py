@@ -24,9 +24,9 @@ class UserUpdate(BaseModel):
 class UserResponseModel(UserBase):
     id: UUID
 
-    class Config:
-        from_attributes = True
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class PasswordChange(BaseModel):

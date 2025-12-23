@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src.common.dependencies import get_current_user
+from src.modules.auth.service import get_current_user
 from src.infrastructure.database import get_db
 from src.models.user import User
 from src.models.transaction import Transaction

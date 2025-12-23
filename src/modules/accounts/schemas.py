@@ -26,9 +26,9 @@ class AccountResponse(AccountBase):
     user_id: UUID
     balance: float
 
-    class Config:
-        from_attributes = True
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class DepositRequest(BaseModel):

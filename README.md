@@ -142,8 +142,6 @@ cd backend
 Installer uv (si non installé)
 ```bash
 pip install uv
-# ou avec Homebrew (macOS)
-brew install uv
 ```
 
 ### 3. Installer les dépendances

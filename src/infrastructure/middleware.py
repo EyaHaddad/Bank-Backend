@@ -15,7 +15,7 @@ Middleware Stack (applied in reverse order):
 import time
 import logging
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Set
 
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
@@ -36,6 +36,13 @@ class AdvancedSecurityMiddleware(BaseHTTPMiddleware):
         rate_limit_records (Dict[str, float]): Tracks last request time per client IP.
         rate_limit_seconds (float): Minimum time interval between requests per IP.
     """
+    EXCLUDED_PATHS: Set[str] = {
+        "/docs",
+        "/redoc",
+        "/favicon.ico",
+        "/openapi.json",
+        "/api/openapi.json",
+    }
 
     def __init__(self, app: FastAPI, rate_limit_seconds: float = 1.0) -> None:
         """
@@ -80,10 +87,15 @@ class AdvancedSecurityMiddleware(BaseHTTPMiddleware):
         Raises:
             HTTP 429: If rate limit is exceeded for the client IP.
         """
+        path = request.url.path
+
+        # Skip rate limiting for public/static endpoints
+        if settings.DEBUG and path in self.EXCLUDED_PATHS:
+            return await call_next(request)
+        
         # Extract client information
         client_ip = request.client.host if request.client else "unknown"
         current_time = time.time()
-        path = request.url.path
 
         # Rate Limiting Check
         # Prevents abuse by limiting request frequency per client IP

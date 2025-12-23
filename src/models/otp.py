@@ -32,32 +32,10 @@ class OTP(BaseEntity):
     attempts = Column(Integer, default=0, nullable=False)
     max_attempts = Column(Integer, default=3, nullable=False)
     expires_at = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
     used_at = Column(DateTime, nullable=True)
 
     # Relationship to User
     user = relationship("User", back_populates="otp_codes")
-
-    def is_valid(self) -> bool:
-        """Check if OTP is still valid."""
-        if self.is_used:
-            return False
-        if self.attempts >= self.max_attempts:
-            return False
-        if datetime.utcnow() > self.expires_at:
-            return False
-        return True
-
-    def verify(self, code: str) -> bool:
-        """Verify the OTP code and update attempts counter."""
-        self.attempts += 1
-        if not self.is_valid():
-            return False
-        if self.code == code:
-            self.is_used = True
-            self.used_at = datetime.utcnow()
-            return True
-        return False
 
     def __repr__(self) -> str:
         return f"<OTP(id={self.id}, user_id={self.user_id}, purpose={self.purpose}, is_used={self.is_used})>"
