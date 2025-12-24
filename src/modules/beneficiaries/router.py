@@ -1,4 +1,5 @@
 """Beneficiary router - API endpoints for beneficiary operations."""
+"""direct use with the transfer module."""
 
 import logging
 from uuid import UUID
