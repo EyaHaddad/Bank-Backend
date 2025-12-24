@@ -22,9 +22,9 @@ class User(BaseEntity):
     lastname = Column(String, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     phone = Column(String, unique=True, index=True, nullable=True)
+    role = Column(Enum(Role), default=Role.USER, nullable=False )
     is_active = Column(Boolean, default=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(Enum(Role), default=Role.USER, nullable=False )
 
     # Relationships
     accounts = relationship("Account", back_populates="user", cascade="all, delete-orphan")

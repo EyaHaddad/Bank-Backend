@@ -1,4 +1,4 @@
-"""Beneficiaries module package."""
+"""Transfers module package."""
 
 from .router import router
 

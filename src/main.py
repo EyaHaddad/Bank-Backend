@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordBearer
 from src.app.routes import register_routes
 from src.config import settings
 from src.infrastructure.database.session import engine, Base
-from src.infrastructure.middleware import setup_middleware
+from src.infrastructure.security.middleware import setup_middleware
 
 # Configure logging
 logging.basicConfig(
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+print("Database tables created.")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

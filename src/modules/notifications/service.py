@@ -260,6 +260,7 @@ Your Banking Team
         """Send an email notification using SMTP."""
         try:
             msg = EmailMessage()
+            # Set email headers and content
             msg["From"] = settings.SMTP_FROM_EMAIL
             msg["To"] = to_email
             msg["Subject"] = subject
