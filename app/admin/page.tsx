@@ -5,16 +5,47 @@ import { StatCard } from "@/components/stat-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Users, Building2, TrendingUp, AlertCircle, CheckCircle, Clock } from "lucide-react"
+import { Users, Building2, TrendingUp, AlertCircle, CheckCircle, Clock, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { logoutUser } from "@/services/auth.service"
+import { listUsers } from "@/services/users.service"
+import type { User } from "@/types/user"
 
 export default function AdminDashboard() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
+  const [users, setUsers] = useState<User[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        const usersData = await listUsers()
+        setUsers(usersData.users)
+      } catch (err) {
+        console.error("Failed to fetch data:", err)
+        setError("Failed to load dashboard data")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
 
   const handleLogout = () => {
+    logoutUser()
     router.push("/")
   }
 
+  // Calculate stats from users
+  const totalClients = users.filter(u => u.role === "user").length
+  const totalAdmins = users.filter(u => u.role === "admin").length
+  const activeUsers = users.filter(u => u.is_active).length
+  const inactiveUsers = users.filter(u => !u.is_active).length
+
+  // Static data that doesn't have backend endpoints
   const recentRequests = [
     { id: 1, client: "John Smith", type: "Account Opening", status: "pending", date: "2025-01-16" },
     { id: 2, client: "Jane Doe", type: "Loan Application", status: "approved", date: "2025-01-15" },
@@ -22,12 +53,21 @@ export default function AdminDashboard() {
     { id: 4, client: "Sarah Williams", type: "Account Closure", status: "rejected", date: "2025-01-13" },
   ]
 
-  const recentActivity = [
-    { id: 1, action: "New client registered", user: "John Smith", time: "2 hours ago" },
-    { id: 2, action: "Account updated", user: "Admin User", time: "4 hours ago" },
-    { id: 3, action: "Exchange rate updated", user: "System", time: "6 hours ago" },
-    { id: 4, action: "Client request approved", user: "Admin User", time: "1 day ago" },
-  ]
+  // Show recent users as activity
+  const recentActivity = users.slice(0, 4).map((user, index) => ({
+    id: index + 1,
+    action: user.is_active ? "User active" : "User registered",
+    user: `${user.first_name} ${user.last_name}`,
+    time: new Date(user.created_at).toLocaleDateString(),
+  }))
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -41,25 +81,25 @@ export default function AdminDashboard() {
 
         <div className="p-8">
           <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Total Clients" value="1,284" icon={Users} trend={{ value: "12.5%", positive: true }} />
+            <StatCard title="Total Clients" value={totalClients.toString()} icon={Users} trend={{ value: `${totalAdmins} admins`, positive: true }} />
             <StatCard
-              title="Active Accounts"
-              value="2,847"
+              title="Active Users"
+              value={activeUsers.toString()}
               icon={Building2}
-              trend={{ value: "8.2%", positive: true }}
+              trend={{ value: `${((activeUsers / users.length) * 100).toFixed(1)}%`, positive: true }}
             />
             <StatCard
-              title="Total Balance"
-              value="$45.2M"
+              title="Total Users"
+              value={users.length.toString()}
               icon={TrendingUp}
-              trend={{ value: "15.3%", positive: true }}
+              trend={{ value: "All time", positive: true }}
             />
             <StatCard
-              title="Pending Requests"
-              value="23"
+              title="Inactive Users"
+              value={inactiveUsers.toString()}
               icon={AlertCircle}
               description="Requires attention"
-              trend={{ value: "5", positive: false }}
+              trend={{ value: inactiveUsers.toString(), positive: inactiveUsers === 0 }}
             />
           </div>
 

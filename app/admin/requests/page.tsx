@@ -7,12 +7,14 @@ import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/useToast"
 import { CheckCircle, XCircle, Clock } from "lucide-react"
+import { logoutUser } from "@/services/auth.service"
 
 export default function ClientRequestsPage() {
   const router = useRouter()
   const { toast } = useToast()
 
   const handleLogout = () => {
+    logoutUser()
     router.push("/")
   }
 
@@ -31,6 +33,7 @@ export default function ClientRequestsPage() {
     })
   }
 
+  // Static data - no backend endpoint for requests
   const requests = [
     {
       id: 1,

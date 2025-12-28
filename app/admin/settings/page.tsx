@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/useToast"
+import { logoutUser } from "@/services/auth.service"
 
 export default function SettingsPage() {
   const router = useRouter()
   const { toast } = useToast()
 
   const handleLogout = () => {
+    logoutUser()
     router.push("/")
   }
 

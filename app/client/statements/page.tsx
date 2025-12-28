@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
 import { Download, FileText, Calendar } from "lucide-react"
+import { logoutUser } from "@/services/auth.service"
 
 export default function StatementsPage() {
   const router = useRouter()
 
   const handleLogout = () => {
+    logoutUser()
     router.push("/")
   }
 
+  // Static data - no backend endpoint for statements
   const statements = [
     { id: 1, month: "January 2025", period: "01/01/2025 - 01/31/2025", account: "Main Checking", size: "2.4 MB" },
     { id: 2, month: "December 2024", period: "12/01/2024 - 12/31/2024", account: "Main Checking", size: "2.1 MB" },

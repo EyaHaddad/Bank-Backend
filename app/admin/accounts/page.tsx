@@ -10,15 +10,18 @@ import { useState } from "react"
 import { Search, Plus, MoreVertical } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { logoutUser } from "@/services/auth.service"
 
 export default function ManageAccountsPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
 
   const handleLogout = () => {
+    logoutUser()
     router.push("/")
   }
 
+  // Static data - no backend endpoint for admin to list all accounts
   const accounts = [
     {
       id: 1,

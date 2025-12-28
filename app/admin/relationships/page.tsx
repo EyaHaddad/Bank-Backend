@@ -8,15 +8,18 @@ import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Search, MessageSquare, Phone, Mail } from "lucide-react"
+import { logoutUser } from "@/services/auth.service"
 
 export default function RelationshipsPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
 
   const handleLogout = () => {
+    logoutUser()
     router.push("/")
   }
 
+  // Static data - no backend endpoint for relationships
   const relationships = [
     {
       id: 1,

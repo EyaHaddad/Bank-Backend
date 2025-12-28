@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/useToast"
+import { Loader2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -17,17 +18,53 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { logoutUser } from "@/services/auth.service"
+import { getMyAccounts } from "@/services/accounts.service"
+import { listBeneficiaries } from "@/services/beneficiaries.service"
+import { createTransfer } from "@/services/transfers.service"
+import type { Account } from "@/types/account"
+import type { Beneficiary } from "@/types/beneficiary"
+import type { TransferCreate } from "@/types/transfer"
 
 export default function TransferPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [amount, setAmount] = useState("")
-  const [beneficiary, setBeneficiary] = useState("")
+  const [beneficiaryId, setBeneficiaryId] = useState("")
   const [fromAccount, setFromAccount] = useState("")
   const [reference, setReference] = useState("")
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        const [accountsData, beneficiariesData] = await Promise.all([
+          getMyAccounts(),
+          listBeneficiaries(),
+        ])
+        setAccounts(accountsData)
+        setBeneficiaries(beneficiariesData.beneficiaries.filter((b: Beneficiary) => b.is_verified))
+      } catch (error) {
+        console.error("Failed to fetch data:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load accounts and beneficiaries",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [toast])
 
   const handleLogout = () => {
+    logoutUser()
     router.push("/")
   }
 
@@ -35,27 +72,43 @@ export default function TransferPage() {
     setShowConfirmation(true)
   }
 
-  const confirmTransfer = () => {
-    toast({
-      title: "Transfer successful",
-      description: `$${amount} has been transferred successfully`,
-    })
-    setShowConfirmation(false)
-    setAmount("")
-    setBeneficiary("")
-    setReference("")
+  const confirmTransfer = async () => {
+    try {
+      setIsSubmitting(true)
+      const transferData: TransferCreate = {
+        sender_account_id: fromAccount,
+        beneficiary_id: beneficiaryId,
+        amount: parseFloat(amount),
+        description: reference || undefined,
+      }
+      await createTransfer(transferData)
+      toast({
+        title: "Transfer successful",
+        description: `$${amount} has been transferred successfully`,
+      })
+      setShowConfirmation(false)
+      setAmount("")
+      setBeneficiaryId("")
+      setReference("")
+      router.push("/client/transactions")
+    } catch (error) {
+      toast({
+        title: "Transfer failed",
+        description: "Unable to complete the transfer. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const beneficiaries = [
-    { id: "1", name: "John Smith", account: "****1234" },
-    { id: "2", name: "Jane Doe", account: "****5678" },
-    { id: "3", name: "Mike Johnson", account: "****9012" },
-  ]
-
-  const accounts = [
-    { id: "1", name: "Main Checking (****1234)", balance: 12450.75 },
-    { id: "2", name: "Savings Account (****5678)", balance: 28750.0 },
-  ]
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -84,7 +137,7 @@ export default function TransferPage() {
                     <SelectContent>
                       {accounts.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
-                          {account.name} - ${account.balance.toLocaleString()}
+                          {account.currency} Account (ID: {account.id.slice(0, 8)}...) - {account.currency} {account.balance.toLocaleString()}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -93,16 +146,20 @@ export default function TransferPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="beneficiary">To Beneficiary</Label>
-                  <Select value={beneficiary} onValueChange={setBeneficiary}>
+                  <Select value={beneficiaryId} onValueChange={setBeneficiaryId}>
                     <SelectTrigger id="beneficiary">
                       <SelectValue placeholder="Select beneficiary" />
                     </SelectTrigger>
                     <SelectContent>
-                      {beneficiaries.map((ben) => (
-                        <SelectItem key={ben.id} value={ben.id}>
-                          {ben.name} - {ben.account}
-                        </SelectItem>
-                      ))}
+                      {beneficiaries.length === 0 ? (
+                        <SelectItem value="no-beneficiaries" disabled>No verified beneficiaries</SelectItem>
+                      ) : (
+                        beneficiaries.map((ben) => (
+                          <SelectItem key={ben.id} value={ben.id}>
+                            {ben.name} - ****{ben.iban.slice(-4)}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
@@ -164,7 +221,7 @@ export default function TransferPage() {
                 <div className="flex gap-2">
                   <Button
                     onClick={handleTransfer}
-                    disabled={!amount || !beneficiary || !fromAccount}
+                    disabled={!amount || !beneficiaryId || !fromAccount}
                     className="flex-1"
                   >
                     Transfer Money
@@ -188,12 +245,14 @@ export default function TransferPage() {
           <div className="space-y-3 py-4">
             <div className="flex justify-between">
               <span className="text-muted-foreground">From:</span>
-              <span className="font-medium text-foreground">{accounts.find((a) => a.id === fromAccount)?.name}</span>
+              <span className="font-medium text-foreground">
+                {accounts.find((a) => a.id === fromAccount)?.currency} Account (ID: {fromAccount.slice(0, 8)}...)
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">To:</span>
               <span className="font-medium text-foreground">
-                {beneficiaries.find((b) => b.id === beneficiary)?.name}
+                {beneficiaries.find((b) => b.id === beneficiaryId)?.name}
               </span>
             </div>
             <div className="flex justify-between">
@@ -211,7 +270,9 @@ export default function TransferPage() {
             <Button variant="outline" onClick={() => setShowConfirmation(false)}>
               Cancel
             </Button>
-            <Button onClick={confirmTransfer}>Confirm Transfer</Button>
+            <Button onClick={confirmTransfer} disabled={isSubmitting}>
+              {isSubmitting ? "Processing..." : "Confirm Transfer"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

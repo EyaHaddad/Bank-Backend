@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useToast } from "@/hooks/useToast"
 import { TrendingUp, TrendingDown, Edit, Save } from "lucide-react"
+import { logoutUser } from "@/services/auth.service"
 
 export default function AdminExchangeRatesPage() {
   const router = useRouter()
@@ -17,6 +18,7 @@ export default function AdminExchangeRatesPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
 
   const handleLogout = () => {
+    logoutUser()
     router.push("/")
   }
 
@@ -28,6 +30,7 @@ export default function AdminExchangeRatesPage() {
     setEditingId(null)
   }
 
+  // Static data - no backend endpoint for exchange rates
   const exchangeRates = [
     { id: 1, currency: "EUR", name: "Euro", rate: 0.92, change: "+0.25%", trend: "up", flag: "🇪🇺" },
     { id: 2, currency: "GBP", name: "British Pound", rate: 0.79, change: "-0.15%", trend: "down", flag: "🇬🇧" },

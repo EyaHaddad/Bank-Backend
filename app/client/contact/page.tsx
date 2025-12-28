@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useToast } from "@/hooks/useToast"
 import { Phone, Mail, MapPin, MessageSquare } from "lucide-react"
+import { logoutUser } from "@/services/auth.service"
 
 export default function ContactPage() {
   const router = useRouter()
@@ -22,6 +23,7 @@ export default function ContactPage() {
   const [message, setMessage] = useState("")
 
   const handleLogout = () => {
+    logoutUser()
     router.push("/")
   }
 

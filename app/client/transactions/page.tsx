@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,127 +9,63 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { ArrowUpRight, ArrowDownRight, Search, Download } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, Search, Download, Loader2 } from "lucide-react"
+import { listMyTransactions } from "@/services/transactions.service"
+import { logoutUser } from "@/services/auth.service"
+import type { Transaction, TransactionType, TransactionStatus } from "@/types/transaction"
 
 export default function TransactionsPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
-  const [filterType, setFilterType] = useState("all")
-  const [filterDate, setFilterDate] = useState("all")
+  const [filterType, setFilterType] = useState<string>("all")
+  const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
   const handleLogout = () => {
+    logoutUser()
     router.push("/")
   }
 
-  const transactions = [
-    {
-      id: 1,
-      description: "Salary Deposit",
-      amount: 5000.0,
-      type: "credit",
-      date: "2025-01-15",
-      status: "completed",
-      account: "Main Checking",
-      category: "Income",
-    },
-    {
-      id: 2,
-      description: "Grocery Store",
-      amount: -125.5,
-      type: "debit",
-      date: "2025-01-14",
-      status: "completed",
-      account: "Main Checking",
-      category: "Shopping",
-    },
-    {
-      id: 3,
-      description: "Transfer to John Doe",
-      amount: -500.0,
-      type: "debit",
-      date: "2025-01-13",
-      status: "completed",
-      account: "Main Checking",
-      category: "Transfer",
-    },
-    {
-      id: 4,
-      description: "Restaurant",
-      amount: -75.25,
-      type: "debit",
-      date: "2025-01-12",
-      status: "completed",
-      account: "Main Checking",
-      category: "Dining",
-    },
-    {
-      id: 5,
-      description: "Investment Return",
-      amount: 250.0,
-      type: "credit",
-      date: "2025-01-11",
-      status: "completed",
-      account: "Investment",
-      category: "Income",
-    },
-    {
-      id: 6,
-      description: "Utility Bill Payment",
-      amount: -150.0,
-      type: "debit",
-      date: "2025-01-10",
-      status: "completed",
-      account: "Main Checking",
-      category: "Bills",
-    },
-    {
-      id: 7,
-      description: "Online Shopping",
-      amount: -89.99,
-      type: "debit",
-      date: "2025-01-09",
-      status: "completed",
-      account: "Main Checking",
-      category: "Shopping",
-    },
-    {
-      id: 8,
-      description: "Freelance Payment",
-      amount: 1200.0,
-      type: "credit",
-      date: "2025-01-08",
-      status: "completed",
-      account: "Main Checking",
-      category: "Income",
-    },
-    {
-      id: 9,
-      description: "Gas Station",
-      amount: -45.0,
-      type: "debit",
-      date: "2025-01-07",
-      status: "completed",
-      account: "Main Checking",
-      category: "Transport",
-    },
-    {
-      id: 10,
-      description: "Pending Transfer",
-      amount: -200.0,
-      type: "debit",
-      date: "2025-01-16",
-      status: "pending",
-      account: "Main Checking",
-      category: "Transfer",
-    },
-  ]
+  useEffect(() => {
+    async function fetchTransactions() {
+      try {
+        setIsLoading(true)
+        const data = await listMyTransactions({
+          page,
+          page_size: 20,
+          transaction_type: filterType !== "all" ? (filterType as TransactionType) : undefined,
+          transaction_status: filterStatus !== "all" ? (filterStatus as TransactionStatus) : undefined,
+        })
+        setTransactions(data.transactions)
+        setTotalPages(Math.ceil(data.total / data.page_size))
+      } catch (err) {
+        console.error("Failed to fetch transactions:", err)
+        setError("Failed to load transactions")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchTransactions()
+  }, [page, filterType, filterStatus])
 
   const filteredTransactions = transactions.filter((transaction) => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesType = filterType === "all" || transaction.type === filterType
-    return matchesSearch && matchesType
+    const matchesSearch =
+      transaction.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.type.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesSearch
   })
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -149,6 +86,12 @@ export default function TransactionsPage() {
         </div>
 
         <div className="p-8">
+          {error && (
+            <div className="mb-4 rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
+              {error}
+            </div>
+          )}
+
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Filters</CardTitle>
@@ -177,23 +120,23 @@ export default function TransactionsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="credit">Credits</SelectItem>
-                      <SelectItem value="debit">Debits</SelectItem>
+                      <SelectItem value="CREDIT">Credits</SelectItem>
+                      <SelectItem value="DEBIT">Debits</SelectItem>
+                      <SelectItem value="TRANSFER">Transfers</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="date">Date Range</Label>
-                  <Select value={filterDate} onValueChange={setFilterDate}>
-                    <SelectTrigger id="date">
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger id="status">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Time</SelectItem>
-                      <SelectItem value="today">Today</SelectItem>
-                      <SelectItem value="week">This Week</SelectItem>
-                      <SelectItem value="month">This Month</SelectItem>
-                      <SelectItem value="year">This Year</SelectItem>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="COMPLETED">Completed</SelectItem>
+                      <SelectItem value="FAILED">Failed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -208,53 +151,84 @@ export default function TransactionsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {filteredTransactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                          transaction.type === "credit" ? "bg-accent/10" : "bg-muted"
-                        }`}
-                      >
-                        {transaction.type === "credit" ? (
-                          <ArrowDownRight className="h-6 w-6 text-accent" />
-                        ) : (
-                          <ArrowUpRight className="h-6 w-6 text-foreground" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{transaction.description}</p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <p className="text-sm text-muted-foreground">{transaction.date}</p>
-                          <span className="text-muted-foreground">•</span>
-                          <p className="text-sm text-muted-foreground">{transaction.account}</p>
-                          <Badge variant="outline" className="text-xs">
-                            {transaction.category}
-                          </Badge>
+                {filteredTransactions.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No transactions found</p>
+                ) : (
+                  filteredTransactions.map((transaction) => (
+                    <div
+                      key={transaction.id}
+                      className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                            transaction.type === "CREDIT" ? "bg-accent/10" : "bg-muted"
+                          }`}
+                        >
+                          {transaction.type === "CREDIT" ? (
+                            <ArrowDownRight className="h-6 w-6 text-accent" />
+                          ) : (
+                            <ArrowUpRight className="h-6 w-6 text-foreground" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {transaction.reference || transaction.type}
+                          </p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(transaction.created_at).toLocaleDateString()}
+                            </p>
+                            <Badge variant="outline" className="text-xs">
+                              {transaction.type}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
+                      <div className="text-right">
+                        <p
+                          className={`text-lg font-semibold ${
+                            transaction.type === "CREDIT" ? "text-accent" : "text-foreground"
+                          }`}
+                        >
+                          {transaction.type === "CREDIT" ? "+" : "-"}${transaction.amount.toFixed(2)}
+                        </p>
+                        <Badge
+                          variant={transaction.status === "COMPLETED" ? "default" : "secondary"}
+                          className="mt-1 text-xs"
+                        >
+                          {transaction.status.toLowerCase()}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p
-                        className={`text-lg font-semibold ${
-                          transaction.type === "credit" ? "text-accent" : "text-foreground"
-                        }`}
-                      >
-                        {transaction.type === "credit" ? "+" : ""}${Math.abs(transaction.amount).toFixed(2)}
-                      </p>
-                      <Badge
-                        variant={transaction.status === "completed" ? "default" : "secondary"}
-                        className="mt-1 text-xs"
-                      >
-                        {transaction.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-6 flex justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="flex items-center px-4 text-sm text-muted-foreground">
+                    Page {page} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

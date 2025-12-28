@@ -6,14 +6,17 @@ import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
 import { TrendingUp, TrendingDown, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { logoutUser } from "@/services/auth.service"
 
 export default function ExchangeRatesPage() {
   const router = useRouter()
 
   const handleLogout = () => {
+    logoutUser()
     router.push("/")
   }
 
+  // Static data - no backend endpoint for exchange rates
   const exchangeRates = [
     { currency: "EUR", name: "Euro", rate: 0.92, change: "+0.25%", trend: "up", flag: "🇪🇺" },
     { currency: "GBP", name: "British Pound", rate: 0.79, change: "-0.15%", trend: "down", flag: "🇬🇧" },
