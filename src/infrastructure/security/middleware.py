@@ -44,14 +44,14 @@ class AdvancedSecurityMiddleware(BaseHTTPMiddleware):
         "/api/openapi.json",
     }
 
-    def __init__(self, app: FastAPI, rate_limit_seconds: float = 1.0) -> None:
+    def __init__(self, app: FastAPI, rate_limit_seconds: float = 0.1) -> None:
         """
         Initialize the AdvancedSecurityMiddleware.
 
         Args:
             app: The FastAPI application instance.
             rate_limit_seconds: Minimum seconds between requests from same IP.
-                               Defaults to 1.0 second.
+                               Defaults to 0.1 second (10 requests/second).
         """
         super().__init__(app)
         self.rate_limit_records: Dict[str, float] = defaultdict(float)
@@ -89,8 +89,17 @@ class AdvancedSecurityMiddleware(BaseHTTPMiddleware):
         """
         path = request.url.path
 
+        # Skip rate limiting entirely in DEBUG mode
+        if settings.DEBUG:
+            response = await call_next(request)
+            # Still add security headers
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["X-Frame-Options"] = "DENY"
+            response.headers["X-XSS-Protection"] = "1; mode=block"
+            return response
+        
         # Skip rate limiting for public/static endpoints
-        if settings.DEBUG and path in self.EXCLUDED_PATHS:
+        if path in self.EXCLUDED_PATHS:
             return await call_next(request)
         
         # Extract client information

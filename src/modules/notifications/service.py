@@ -639,3 +639,44 @@ def send_password_reset_otp_notification_helper(
     """Helper function to send password reset OTP notification from other modules."""
     service = NotificationService(db)
     return service.send_password_reset_otp_notification(user_id, otp_code)
+
+
+def send_email_verification_otp(email: str, otp_code: str) -> bool:
+    """
+    Send email verification OTP to an email address (for pending registrations).
+    This function doesn't require a user in the database.
+    """
+    subject = "Your Secure Banking Verification Code"
+    content = f"""
+Hello,
+
+Your verification code for account registration is:
+
+    {otp_code}
+
+This code is valid for 10 minutes. Do not share this code with anyone.
+
+If you did not request this code, please ignore this email.
+
+Best regards,
+Your Banking Team
+    """.strip()
+    
+    try:
+        msg = EmailMessage()
+        msg["From"] = settings.SMTP_FROM_EMAIL
+        msg["To"] = email
+        msg["Subject"] = subject
+        msg.set_content(content)
+
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            if settings.SMTP_TLS:
+                server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+        
+        logger.info(f"Verification OTP email sent successfully to {email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send verification OTP email to {email}: {str(e)}")
+        raise NotificationSendError(f"Failed to send verification email: {str(e)}")

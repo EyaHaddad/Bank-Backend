@@ -24,6 +24,7 @@ class User(BaseEntity):
     phone = Column(String, unique=True, index=True, nullable=True)
     role = Column(Enum(Role), default=Role.USER, nullable=False )
     is_active = Column(Boolean, default=True, nullable=False)
+    is_email_verified = Column(Boolean, default=False, nullable=False)
     password_hash = Column(String, nullable=False)
 
     # Relationships

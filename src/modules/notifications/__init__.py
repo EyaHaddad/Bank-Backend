@@ -7,6 +7,7 @@ from .service import (
     send_transaction_notification_helper,
     send_welcome_notification_helper,
     send_email_verification_notification_helper,
+    send_email_verification_otp,
     send_password_change_notification_helper,
     send_login_otp_notification_helper,
     send_transaction_otp_notification_helper,

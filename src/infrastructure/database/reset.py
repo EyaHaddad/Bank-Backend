@@ -2,6 +2,12 @@
 
 from src.infrastructure.database import Base, get_engine
 
+# IMPORTANT: Import all models so Base.metadata knows about all tables
+from src.models import (
+    User, Account, Transaction, Beneficiary, 
+    OTP, Notification, Transfer
+)
+
 engine = get_engine()
 
 Base.metadata.drop_all(bind=engine)

@@ -237,7 +237,9 @@ uv run python src/main.py
 ### Authentification (`/api/auth`)
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
-| POST | `/api/auth/` | Inscription utilisateur |
+| POST | `/api/auth/` | Initier l'inscription (envoie OTP par email) |
+| POST | `/api/auth/verify-email` | Vérifier email avec OTP et créer le compte |
+| POST | `/api/auth/resend-otp` | Renvoyer le code OTP de vérification |
 | POST | `/api/auth/token` | Connexion (obtenir access token) |
 
 ### Utilisateurs (`/api/users`)
@@ -320,9 +322,17 @@ uv run python src/main.py
 
 ## 🔐 Authentification
 
+### Flux d'inscription sécurisé
+1. Utilisateur remplit le formulaire d'inscription
+2. `POST /api/auth/` stocke les données temporairement et envoie un OTP par email
+3. L'utilisateur n'est **PAS** créé dans la base de données à ce stade
+4. Utilisateur entre le code OTP reçu par email
+5. `POST /api/auth/verify-email` vérifie l'OTP et crée l'utilisateur en base
+6. L'utilisateur peut maintenant se connecter
+
 ### Flux JWT
-1. Utilisateur s'inscrit via `POST /api/auth/`
-2. Utilisateur se connecte via `POST /api/auth/token` avec ses identifiants
+1. Utilisateur se connecte via `POST /api/auth/token` avec ses identifiants
+2. Backend vérifie que l'email est vérifié
 3. Backend génère un access token JWT
 4. Client inclut le token dans les headers : `Authorization: Bearer <token>`
 5. Les endpoints protégés valident le token

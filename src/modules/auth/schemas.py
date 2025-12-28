@@ -1,7 +1,7 @@
 """Authentication schemas - Pydantic models for request/response."""
 
 from uuid import UUID
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class RegisterUserRequest(BaseModel):
@@ -11,6 +11,23 @@ class RegisterUserRequest(BaseModel):
     email: EmailStr
     password: str
     confirm_password: str
+
+
+class VerifyEmailRequest(BaseModel):
+    """Model for email verification OTP request."""
+    email: EmailStr
+    code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+
+
+class VerifyEmailResponse(BaseModel):
+    """Model for email verification response."""
+    success: bool
+    message: str
+
+
+class ResendOTPRequest(BaseModel):
+    """Model for resending OTP request."""
+    email: EmailStr
 
 
 class LoginUserRequest(BaseModel):
