@@ -152,7 +152,7 @@ npm run lint
 ## 📁 Structure du projet
 
 ```
-Bank-Backend/
+Bank-Frontend/
 ├── app/                        # App Router (Next.js 13+)
 │   ├── layout.tsx              # Layout principal
 │   ├── page.tsx                # Page de connexion
