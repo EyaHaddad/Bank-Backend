@@ -29,7 +29,7 @@ class Notification(BaseEntity):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
     # Relationship to User
-    user = relationship("User", back_populates="notifications")
+    user = relationship("User", back_populates="notifications", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Notification(id={self.id}, type={self.type}, title={self.title}, user_id={self.user_id})>"

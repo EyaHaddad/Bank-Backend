@@ -21,7 +21,7 @@ class Transfer(Transaction):
     }
 
     # Relationships
-    beneficiary = relationship("Beneficiary", foreign_keys=[beneficiary_id])
-
+    beneficiary = relationship("Beneficiary", foreign_keys=[beneficiary_id], cascade="all, delete-orphan")
+    
     def __repr__(self) -> str:
         return f"<Transfer(id={self.id}, amount={self.amount}, status={self.status}, beneficiary_id={self.beneficiary_id})>"

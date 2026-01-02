@@ -41,7 +41,8 @@ class Transaction(BaseEntity):
     }
     
     # Relationships
-    sender_account = relationship("Account", foreign_keys=[sender_account_id])
+    # When an Account is deleted, all their Transactions are also deleted
+    sender_account = relationship("Account", foreign_keys=[sender_account_id], cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Transaction(id={self.id}, type={self.type}, status={self.status}, amount={self.amount})>"

@@ -21,7 +21,7 @@ class Beneficiary(BaseEntity):
     is_verified = Column(Boolean, default=False, nullable=False)
 
     # Relationship to User
-    user = relationship("User", back_populates="beneficiaries")
+    user = relationship("User", back_populates="beneficiaries", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Beneficiary(id={self.id}, name={self.name}, iban={self.iban}, is_verified={self.is_verified})>"

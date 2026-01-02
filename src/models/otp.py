@@ -35,7 +35,8 @@ class OTP(BaseEntity):
     used_at = Column(DateTime, nullable=True)
 
     # Relationship to User
-    user = relationship("User", back_populates="otp_codes")
+    # When a User is deleted, all their OTPs are also deleted
+    user = relationship("User", back_populates="otp_codes", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<OTP(id={self.id}, user_id={self.user_id}, purpose={self.purpose}, is_used={self.is_used})>"

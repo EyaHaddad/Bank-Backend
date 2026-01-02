@@ -27,7 +27,7 @@ class Account(BaseEntity):
     status = Column(Enum(AccountStatus), default=AccountStatus.ACTIVE, nullable=False)
 
     # Relationship to User
-    user = relationship("User", back_populates="accounts")
+    user = relationship("User", back_populates="accounts", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Account(id={self.id}, user_id={self.user_id}, balance={self.balance}, currency={self.currency}, status={self.status})>"
