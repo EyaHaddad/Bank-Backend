@@ -2,28 +2,15 @@ import api from "./axiosInstance";
 import type {
   Transaction,
   TransactionListResponse,
-  CreditRequest,
-  DebitRequest,
   TransactionFilters,
 } from "@/types/transaction";
 
 // ---------------- TRANSACTIONS ----------------
-
-/**
- * Credit (deposit) money to an account
- */
-export async function creditAccount(data: CreditRequest): Promise<Transaction> {
-  const response = await api.post<Transaction>("/transactions/credit", data);
-  return response.data;
-}
-
-/**
- * Debit (withdraw) money from an account
- */
-export async function debitAccount(data: DebitRequest): Promise<Transaction> {
-  const response = await api.post<Transaction>("/transactions/debit", data);
-  return response.data;
-}
+// NOTE: Credit and Debit endpoints have been removed.
+// Clients cannot directly credit/debit their accounts.
+// Money can only be:
+// 1. Transferred between the client's own accounts
+// 2. Sent to beneficiaries via the transfers service
 
 /**
  * Get a specific transaction by ID

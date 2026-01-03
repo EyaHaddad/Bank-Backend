@@ -6,7 +6,7 @@ import { StatCard } from "@/components/stat-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight, CreditCard, PiggyBank, Loader2 } from "lucide-react"
+import { Wallet, TrendingUp, ArrowUpRight, ArrowDownRight, CreditCard, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { getMyAccounts } from "@/services/accounts.service"
 import { listMyTransactions } from "@/services/transactions.service"
@@ -29,8 +29,8 @@ export default function ClientDashboard() {
           getMyAccounts(),
           listMyTransactions({ page: 1, page_size: 5 }),
         ])
-        setAccounts(accountsData)
-        setTransactions(transactionsData.transactions)
+        setAccounts(accountsData || [])
+        setTransactions(transactionsData?.transactions || [])
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err)
         setError("Failed to load dashboard data")
@@ -48,9 +48,13 @@ export default function ClientDashboard() {
 
   const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0)
 
-  // Calculate monthly income from credit transactions
-  const monthlyIncome = transactions
+  // Calculate totals from transactions
+  const totalCredits = transactions
     .filter((t) => t.type === "CREDIT")
+    .reduce((sum, t) => sum + t.amount, 0)
+  
+  const totalDebits = transactions
+    .filter((t) => t.type === "DEBIT")
     .reduce((sum, t) => sum + t.amount, 0)
 
   if (isLoading) {
@@ -83,27 +87,27 @@ export default function ClientDashboard() {
               title="Total Balance"
               value={`$${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
               icon={Wallet}
-              trend={{ value: "12.5%", positive: true }}
+              description="All accounts combined"
             />
             <StatCard
-              title="Monthly Income"
-              value={`$${monthlyIncome.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
-              icon={TrendingUp}
-              description="Last updated today"
-              trend={{ value: "8.2%", positive: true }}
+              title="Total Credits"
+              value={`$${totalCredits.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+              icon={ArrowDownRight}
+              description="Recent credits"
+              trend={{ value: `${transactions.filter(t => t.type === "CREDIT").length} transactions`, positive: true }}
+            />
+            <StatCard
+              title="Total Debits"
+              value={`$${totalDebits.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+              icon={ArrowUpRight}
+              description="Recent debits"
+              trend={{ value: `${transactions.filter(t => t.type === "DEBIT").length} transactions`, positive: false }}
             />
             <StatCard
               title="Active Accounts"
               value={accounts.length.toString()}
               icon={CreditCard}
               description="All accounts active"
-            />
-            <StatCard
-              title="Savings Goal"
-              value="68%"
-              icon={PiggyBank}
-              description="$20,400 of $30,000"
-              trend={{ value: "5.3%", positive: true }}
             />
           </div>
 

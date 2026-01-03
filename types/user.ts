@@ -1,5 +1,7 @@
 // User types matching backend schemas
 
+export type UserRole = "admin" | "user";
+
 export interface UserBase {
   firstname: string;
   lastname: string;
@@ -8,6 +10,8 @@ export interface UserBase {
 
 export interface UserCreate extends UserBase {
   password: string;
+  phone?: string;
+  address?: string;
 }
 
 export interface UserUpdate {
@@ -18,6 +22,10 @@ export interface UserUpdate {
 
 export interface User extends UserBase {
   id: string;
+  phone?: string;
+  role: UserRole;
+  is_active: boolean;
+  created_at: string;
 }
 
 export interface PasswordChange {

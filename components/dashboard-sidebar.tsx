@@ -17,6 +17,7 @@ import {
   Settings,
   FileText,
   HelpCircle,
+  Phone,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -34,23 +35,20 @@ interface DashboardSidebarProps {
 
 const clientLinks: SidebarLink[] = [
   { href: "/client", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/client/accounts", label: "My Accounts", icon: Building2 },
+  { href: "/client/transactions", label: "Transactions", icon: Receipt },
   { href: "/client/transfer", label: "Transfer Money", icon: ArrowLeftRight },
   { href: "/client/beneficiaries", label: "Beneficiaries", icon: Users },
-  { href: "/client/transactions", label: "Transactions", icon: Receipt },
   { href: "/client/statements", label: "Statements", icon: FileText },
   { href: "/client/exchange-rates", label: "Exchange Rates", icon: DollarSign },
-  { href: "/client/contact", label: "Contact Bank", icon: MessageCircle },
+  { href: "/client/contact", label: "Contact", icon: Phone },
   { href: "/client/profile", label: "My Profile", icon: User },
 ]
 
 const adminLinks: SidebarLink[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/clients", label: "Manage Clients", icon: Users },
+  { href: "/admin/users", label: "Manage Clients", icon: Users },
   { href: "/admin/accounts", label: "Manage Accounts", icon: Building2 },
-  { href: "/admin/requests", label: "Client Requests", icon: HelpCircle },
-  { href: "/admin/relationships", label: "Relationships", icon: MessageCircle },
-  { href: "/admin/exchange-rates", label: "Exchange Rates", icon: DollarSign },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
 ]
 
 export function DashboardSidebar({ role, onLogout }: DashboardSidebarProps) {

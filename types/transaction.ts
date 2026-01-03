@@ -3,17 +3,8 @@
 export type TransactionType = "DEBIT" | "CREDIT" | "TRANSFER";
 export type TransactionStatus = "PENDING" | "COMPLETED" | "FAILED";
 
-export interface CreditRequest {
-  account_id: string;
-  amount: number;
-  reference?: string;
-}
-
-export interface DebitRequest {
-  account_id: string;
-  amount: number;
-  reference?: string;
-}
+// NOTE: CreditRequest and DebitRequest have been removed.
+// Clients cannot directly credit/debit their accounts.
 
 export interface Transaction {
   id: string;

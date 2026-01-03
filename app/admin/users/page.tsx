@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/useToast"
-import { UserPlus, Search, Edit, Trash2, MoreVertical, Shield, Loader2 } from "lucide-react"
+import { UserPlus, Search, Edit, Trash2, MoreVertical, Shield, Loader2, UserCheck, UserX } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -18,35 +18,52 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { logoutUser } from "@/services/auth.service"
 import { listUsers, createUser, deleteUser, updateUser } from "@/services/users.service"
-import { promoteUserToAdmin, demoteAdminToUser } from "@/services/admin.service"
+import { promoteUserToAdmin, demoteAdminToUser, activateUser, deactivateUser, adminDeleteUser } from "@/services/admin.service"
 import type { User, UserCreate, UserUpdate } from "@/types/user"
 
 export default function ManageClientsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
   
-  // Form state
+  // Form state for adding
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
   const [password, setPassword] = useState("")
+  
+  // Form state for editing
+  const [editFirstName, setEditFirstName] = useState("")
+  const [editLastName, setEditLastName] = useState("")
 
   const fetchUsers = async () => {
     try {
       setIsLoading(true)
       const data = await listUsers()
-      setUsers(data.users)
+      setUsers(data || [])
     } catch (error) {
       console.error("Failed to fetch users:", error)
       toast({
@@ -72,8 +89,8 @@ export default function ManageClientsPage() {
     try {
       setIsSubmitting(true)
       const newUser: UserCreate = {
-        first_name: firstName,
-        last_name: lastName,
+        firstname: firstName,
+        lastname: lastName,
         email: email,
         password: password,
         phone: phone || undefined,
@@ -98,53 +115,132 @@ export default function ManageClientsPage() {
     }
   }
 
-  const handleDeleteUser = async (userId: string, userName: string) => {
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return
     try {
-      await deleteUser(userId)
+      setIsSubmitting(true)
+      await adminDeleteUser(selectedUser.id)
       toast({
         title: "User deleted",
-        description: `${userName} has been removed`,
+        description: `${selectedUser.firstname} ${selectedUser.lastname} has been removed`,
         variant: "destructive",
       })
+      setShowDeleteDialog(false)
+      setSelectedUser(null)
       fetchUsers()
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to delete user",
+        description: error?.response?.data?.detail || "Failed to delete user",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const openDeleteDialog = (user: User) => {
+    setSelectedUser(user)
+    setShowDeleteDialog(true)
+  }
+
+  const openEditDialog = (user: User) => {
+    setSelectedUser(user)
+    setEditFirstName(user.firstname)
+    setEditLastName(user.lastname)
+    setShowEditDialog(true)
+  }
+
+  const handleEditUser = async () => {
+    if (!selectedUser) return
+    try {
+      setIsSubmitting(true)
+      await updateUser(selectedUser.id, {
+        firstname: editFirstName,
+        lastname: editLastName,
+      })
+      toast({
+        title: "User updated",
+        description: `${editFirstName} ${editLastName}'s profile has been updated`,
+      })
+      setShowEditDialog(false)
+      setSelectedUser(null)
+      fetchUsers()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.response?.data?.detail || "Failed to update user",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleActivateUser = async (user: User) => {
+    try {
+      await activateUser(user.id)
+      toast({
+        title: "User activated",
+        description: `${user.firstname} ${user.lastname}'s account has been activated`,
+      })
+      fetchUsers()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.response?.data?.detail || "Failed to activate user",
         variant: "destructive",
       })
     }
   }
 
-  const handlePromoteUser = async (userId: string, userName: string) => {
+  const handleDeactivateUser = async (user: User) => {
     try {
-      await promoteUserToAdmin(userId)
+      await deactivateUser(user.id)
+      toast({
+        title: "User deactivated",
+        description: `${user.firstname} ${user.lastname}'s account has been deactivated`,
+        variant: "destructive",
+      })
+      fetchUsers()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.response?.data?.detail || "Failed to deactivate user",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handlePromoteUser = async (user: User) => {
+    try {
+      await promoteUserToAdmin(user.id)
       toast({
         title: "User promoted",
-        description: `${userName} is now an admin`,
+        description: `${user.firstname} ${user.lastname} is now an admin`,
       })
       fetchUsers()
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to promote user",
+        description: error?.response?.data?.detail || "Failed to promote user",
         variant: "destructive",
       })
     }
   }
 
-  const handleDemoteUser = async (userId: string, userName: string) => {
+  const handleDemoteUser = async (user: User) => {
     try {
-      await demoteAdminToUser(userId)
+      await demoteAdminToUser(user.id)
       toast({
         title: "Admin demoted",
-        description: `${userName} is now a regular user`,
+        description: `${user.firstname} ${user.lastname} is now a regular user`,
       })
       fetchUsers()
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to demote admin",
+        description: error?.response?.data?.detail || "Failed to demote admin",
         variant: "destructive",
       })
     }
@@ -160,7 +256,7 @@ export default function ManageClientsPage() {
   }
 
   const filteredUsers = users.filter((user) =>
-    `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    `${user.firstname} ${user.lastname}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -227,7 +323,7 @@ export default function ManageClientsPage() {
                 <TableBody>
                   {filteredUsers.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.first_name} {user.last_name}</TableCell>
+                      <TableCell className="font-medium">{user.firstname} {user.lastname}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.phone || "N/A"}</TableCell>
                       <TableCell>
@@ -247,24 +343,38 @@ export default function ManageClientsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEditDialog(user)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit User
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {user.is_active ? (
+                              <DropdownMenuItem onClick={() => handleDeactivateUser(user)}>
+                                <UserX className="mr-2 h-4 w-4 text-yellow-500" />
+                                Deactivate User
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem onClick={() => handleActivateUser(user)}>
+                                <UserCheck className="mr-2 h-4 w-4 text-green-500" />
+                                Activate User
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
                             {user.role === "user" ? (
-                              <DropdownMenuItem onClick={() => handlePromoteUser(user.id, `${user.first_name} ${user.last_name}`)}>
+                              <DropdownMenuItem onClick={() => handlePromoteUser(user)}>
                                 <Shield className="mr-2 h-4 w-4" />
                                 Promote to Admin
                               </DropdownMenuItem>
                             ) : (
-                              <DropdownMenuItem onClick={() => handleDemoteUser(user.id, `${user.first_name} ${user.last_name}`)}>
+                              <DropdownMenuItem onClick={() => handleDemoteUser(user)}>
                                 <Shield className="mr-2 h-4 w-4" />
                                 Demote to User
                               </DropdownMenuItem>
                             )}
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-destructive"
-                              onClick={() => handleDeleteUser(user.id, `${user.first_name} ${user.last_name}`)}
+                              onClick={() => openDeleteDialog(user)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete User
@@ -361,6 +471,73 @@ export default function ManageClientsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              {selectedUser && `Update ${selectedUser.firstname} ${selectedUser.lastname}'s profile`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="editFirstName">First Name</Label>
+                <Input
+                  id="editFirstName"
+                  placeholder="John"
+                  value={editFirstName}
+                  onChange={(e) => setEditFirstName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editLastName">Last Name</Label>
+                <Input
+                  id="editLastName"
+                  placeholder="Doe"
+                  value={editLastName}
+                  onChange={(e) => setEditLastName(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditUser}
+              disabled={isSubmitting || !editFirstName || !editLastName}
+            >
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete
+              {selectedUser && ` ${selectedUser.firstname} ${selectedUser.lastname}`}'s account and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isSubmitting ? "Deleting..." : "Delete User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

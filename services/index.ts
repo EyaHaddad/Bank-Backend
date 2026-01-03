@@ -8,6 +8,7 @@ export * from "./beneficiaries.service";
 export * from "./notifications.service";
 export * from "./otps.service";
 export * from "./admin.service";
+export * from "./currency.service";
 
 // Export axios instance and helpers
 export { default as api } from "./axiosInstance";

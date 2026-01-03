@@ -1,101 +1,470 @@
 # 🏦 BankFlow - Application Bancaire Frontend
 
-Une application bancaire moderne et sécurisée développée avec **Next.js 16**, **React 19**, et **Tailwind CSS 4**. Cette interface offre une expérience utilisateur fluide pour la gestion des opérations bancaires.
+<div align="center">
 
-![Next.js](https://img.shields.io/badge/Next.js-16.0.10-black?logo=next.js)
-![React](https://img.shields.io/badge/React-19.2.0-blue?logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.1.9-38B2AC?logo=tailwind-css)
-![Axios](https://img.shields.io/badge/Axios-1.7.9-5A29E4?logo=axios)
+![Next.js](https://img.shields.io/badge/Next.js-16.0.10-black?logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-19.2.0-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.1.9-06B6D4?logo=tailwind-css&logoColor=white)
+![Axios](https://img.shields.io/badge/Axios-1.7.9-5A29E4?logo=axios&logoColor=white)
+![Radix UI](https://img.shields.io/badge/Radix%20UI-Latest-161618?logo=radix-ui&logoColor=white)
+
+**Interface bancaire moderne et sécurisée**
+
+*Développé dans le cadre du cours de Sécurité Informatique - ING-2*
+
+</div>
+
+---
 
 ## 📋 Table des matières
 
-- [Fonctionnalités](#-fonctionnalités)
-- [Technologies utilisées](#-technologies-utilisées)
+- [Vue d'ensemble](#-vue-densemble)
+- [Architecture globale](#-architecture-globale)
+- [Stack technologique](#-stack-technologique)
+- [Sécurité](#-sécurité)
 - [Prérequis](#-prérequis)
 - [Installation](#-installation)
 - [Démarrage](#-démarrage)
 - [Structure du projet](#-structure-du-projet)
 - [Services API](#-services-api)
-- [Comptes de démonstration](#-comptes-de-démonstration)
-- [Configuration API](#-configuration-api)
+- [Configuration](#-configuration)
+- [Contribution](#-contribution)
 
-## ✨ Fonctionnalités
+---
 
-### 👤 Espace Client
-- **Dashboard** - Vue d'ensemble du compte avec statistiques
-- **Transactions** - Historique et suivi des transactions
-- **Virements** - Effectuer des transferts d'argent
-- **Bénéficiaires** - Gestion des bénéficiaires
-- **Relevés** - Consultation des relevés bancaires
-- **Taux de change** - Consultation des taux de change en temps réel
-- **Profil** - Gestion du profil utilisateur
-- **Contact** - Support client
+## 🎯 Vue d'ensemble
 
-### 🔐 Espace Administrateur
-- **Dashboard** - Tableau de bord administrateur
-- **Utilisateurs** - Gestion des utilisateurs
-- **Comptes** - Gestion des comptes bancaires
-- **Relations** - Gestion des relations clients
-- **Demandes** - Traitement des demandes
-- **Taux de change** - Configuration des taux
-- **Paramètres** - Configuration du système
+Interface utilisateur moderne d'une application bancaire sécurisée, développée avec **Next.js 16** et **React 19**. Cette application offre une expérience utilisateur fluide pour la gestion des opérations bancaires avec un accent particulier sur la **sécurité côté client**.
 
-## 🛠 Technologies utilisées
+### Fonctionnalités par espace
 
-| Technologie | Version | Description |
-|-------------|---------|-------------|
-| **Next.js** | 16.0.10 | Framework React avec App Router |
-| **React** | 19.2.0 | Bibliothèque UI |
-| **TypeScript** | 5.x | Typage statique |
-| **Tailwind CSS** | 4.1.9 | Framework CSS utilitaire |
-| **Axios** | 1.7.9 | Client HTTP avec interceptors |
-| **Radix UI** | Latest | Composants UI accessibles |
-| **Lucide React** | 0.454.0 | Icônes |
-| **React Hook Form** | 7.60.0 | Gestion des formulaires |
-| **Zod** | 3.25.76 | Validation de schémas |
-| **Recharts** | 2.15.4 | Graphiques et visualisations |
-| **Sonner** | 1.7.4 | Notifications toast |
-| **date-fns** | 4.1.0 | Manipulation des dates |
-| **next-themes** | 0.4.6 | Gestion des thèmes (clair/sombre) |
-| **input-otp** | 1.4.1 | Champs OTP pour vérification |
+#### 👤 Espace Client
+
+| Fonctionnalité | Description |
+|----------------|-------------|
+| **Dashboard** | Vue d'ensemble avec statistiques et graphiques |
+| **Transactions** | Historique détaillé et suivi des opérations |
+| **Virements** | Transferts sécurisés avec validation OTP |
+| **Bénéficiaires** | Gestion complète des destinataires |
+| **Relevés** | Consultation et téléchargement PDF |
+| **Taux de change** | Consultation en temps réel |
+| **Profil** | Gestion des informations personnelles |
+| **Contact** | Support client intégré |
+
+#### 🔐 Espace Administrateur
+
+| Fonctionnalité | Description |
+|----------------|-------------|
+| **Dashboard** | Tableau de bord avec métriques globales |
+| **Utilisateurs** | CRUD complet des utilisateurs |
+| **Comptes** | Gestion de tous les comptes bancaires |
+| **Paramètres** | Configuration système |
+
+---
+
+## 🏗️ Architecture globale
+
+### Diagramme d'architecture Frontend-Backend
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              NAVIGATEUR CLIENT                               │
+│                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────┐ │
+│  │                         NEXT.JS APPLICATION                             │ │
+│  │                                                                         │ │
+│  │  ┌─────────────────────────────────────────────────────────────────┐   │ │
+│  │  │                      MIDDLEWARE LAYER                            │   │ │
+│  │  │  • Route Protection (cookie-based auth)                          │   │ │
+│  │  │  • Role-Based Access Control (RBAC)                              │   │ │
+│  │  │  • Security Headers Injection (CSP, HSTS, XSS...)                │   │ │
+│  │  │  • Redirect Logic                                                 │   │ │
+│  │  └─────────────────────────────────────────────────────────────────┘   │ │
+│  │                                │                                        │ │
+│  │                                ▼                                        │ │
+│  │  ┌─────────────────────────────────────────────────────────────────┐   │ │
+│  │  │                        APP ROUTER                                │   │ │
+│  │  │                                                                  │   │ │
+│  │  │   ┌──────────────┐   ┌──────────────┐   ┌──────────────────┐    │   │ │
+│  │  │   │   / (login)  │   │   /client/*  │   │    /admin/*      │    │   │ │
+│  │  │   │   PUBLIC     │   │   PROTECTED  │   │ ADMIN PROTECTED  │    │   │ │
+│  │  │   └──────────────┘   └──────────────┘   └──────────────────┘    │   │ │
+│  │  └─────────────────────────────────────────────────────────────────┘   │ │
+│  │                                │                                        │ │
+│  │                                ▼                                        │ │
+│  │  ┌─────────────────────────────────────────────────────────────────┐   │ │
+│  │  │                      COMPONENTS LAYER                            │   │ │
+│  │  │                                                                  │   │ │
+│  │  │   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐    │   │ │
+│  │  │   │   UI     │  │  Forms   │  │  Charts  │  │   Sidebar    │    │   │ │
+│  │  │   │(shadcn)  │  │(Hook Form)│ │(Recharts)│  │  Navigation  │    │   │ │
+│  │  │   └──────────┘  └──────────┘  └──────────┘  └──────────────┘    │   │ │
+│  │  └─────────────────────────────────────────────────────────────────┘   │ │
+│  │                                │                                        │ │
+│  │                                ▼                                        │ │
+│  │  ┌─────────────────────────────────────────────────────────────────┐   │ │
+│  │  │                       HOOKS LAYER                                │   │ │
+│  │  │    useAuth • useToast • useMobile                                │   │ │
+│  │  └─────────────────────────────────────────────────────────────────┘   │ │
+│  │                                │                                        │ │
+│  │                                ▼                                        │ │
+│  │  ┌─────────────────────────────────────────────────────────────────┐   │ │
+│  │  │                      SERVICES LAYER                              │   │ │
+│  │  │                                                                  │   │ │
+│  │  │   ┌─────────────────────────────────────────────────────────┐   │   │ │
+│  │  │   │                  AXIOS INSTANCE                          │   │   │ │
+│  │  │   │  • Auto Bearer Token Injection                           │   │   │ │
+│  │  │   │  • 401 Error Handling (auto logout)                      │   │   │ │
+│  │  │   │  • 10s Timeout                                           │   │   │ │
+│  │  │   └─────────────────────────────────────────────────────────┘   │   │ │
+│  │  │                                                                  │   │ │
+│  │  │   auth • users • accounts • transactions • transfers            │   │ │
+│  │  │   beneficiaries • notifications • otps • admin • currency       │   │ │
+│  │  └─────────────────────────────────────────────────────────────────┘   │ │
+│  │                                │                                        │ │
+│  │  ┌─────────────────────────────────────────────────────────────────┐   │ │
+│  │  │                     TOKEN STORAGE                                │   │ │
+│  │  │    SessionStorage (API calls) + Cookies (Middleware)            │   │ │
+│  │  └─────────────────────────────────────────────────────────────────┘   │ │
+│  └────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    │ HTTPS + JWT Bearer Token
+                                    │ Content-Type: application/json
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           BACKEND (FastAPI)                                  │
+│                                                                              │
+│  • Rate Limiting        • JWT Validation       • CORS Policy                │
+│  • Security Headers     • Password Hashing     • OTP Verification           │
+│  • PostgreSQL DB        • Role-Based Access    • Transaction Limits         │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Architecture des composants
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         ARCHITECTURE NEXT.JS                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────────┐│
+│  │ PAGES (App Router)                                                       ││
+│  │                                                                          ││
+│  │  app/                                                                    ││
+│  │  ├── layout.tsx           # Layout racine + ThemeProvider               ││
+│  │  ├── page.tsx             # Page de connexion                           ││
+│  │  │                                                                       ││
+│  │  ├── client/              # Espace Client (protégé)                     ││
+│  │  │   ├── page.tsx         # Dashboard client                            ││
+│  │  │   ├── accounts/        # Gestion des comptes                         ││
+│  │  │   ├── beneficiaries/   # Gestion bénéficiaires                       ││
+│  │  │   ├── transactions/    # Historique transactions                     ││
+│  │  │   ├── transfer/        # Virements                                   ││
+│  │  │   ├── statements/      # Relevés bancaires                           ││
+│  │  │   ├── exchange-rates/  # Taux de change                              ││
+│  │  │   ├── profile/         # Profil utilisateur                          ││
+│  │  │   └── contact/         # Support                                     ││
+│  │  │                                                                       ││
+│  │  └── admin/               # Espace Admin (protégé + rôle admin)         ││
+│  │      ├── page.tsx         # Dashboard admin                             ││
+│  │      ├── users/           # Gestion utilisateurs                        ││
+│  │      └── accounts/        # Gestion comptes (admin)                     ││
+│  │                                                                          ││
+│  └──────────────────────────────────────────────────────────────────────────┘│
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────────┐│
+│  │ COMPONENTS                                                               ││
+│  │                                                                          ││
+│  │  components/                                                             ││
+│  │  ├── ui/                  # Composants shadcn/ui (40+ composants)       ││
+│  │  │   ├── button.tsx       # Boutons avec variants                       ││
+│  │  │   ├── card.tsx         # Cartes                                      ││
+│  │  │   ├── dialog.tsx       # Modales                                     ││
+│  │  │   ├── input.tsx        # Champs de saisie                            ││
+│  │  │   ├── input-otp.tsx    # Champs OTP                                  ││
+│  │  │   ├── table.tsx        # Tableaux                                    ││
+│  │  │   └── ...              # +35 composants UI                           ││
+│  │  │                                                                       ││
+│  │  ├── dashboard-sidebar.tsx  # Navigation latérale                       ││
+│  │  ├── stat-card.tsx          # Cartes statistiques                       ││
+│  │  └── theme-provider.tsx     # Gestion thème clair/sombre                ││
+│  │                                                                          ││
+│  └──────────────────────────────────────────────────────────────────────────┘│
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────────┐│
+│  │ SERVICES & TYPES                                                         ││
+│  │                                                                          ││
+│  │  services/                types/                                         ││
+│  │  ├── axiosInstance.ts     ├── auth.ts                                   ││
+│  │  ├── auth.service.ts      ├── user.ts                                   ││
+│  │  ├── users.service.ts     ├── account.ts                                ││
+│  │  ├── accounts.service.ts  ├── transaction.ts                            ││
+│  │  ├── transfers.service.ts ├── transfer.ts                               ││
+│  │  ├── beneficiaries.ts     ├── beneficiary.ts                            ││
+│  │  ├── notifications.ts     ├── notification.ts                           ││
+│  │  ├── otps.service.ts      ├── otp.ts                                    ││
+│  │  ├── admin.service.ts     └── index.ts                                  ││
+│  │  ├── currency.service.ts                                                 ││
+│  │  └── index.ts                                                            ││
+│  │                                                                          ││
+│  └──────────────────────────────────────────────────────────────────────────┘│
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🛠️ Stack technologique
+
+### Technologies principales
+
+| Catégorie | Technologie | Version | Description |
+|-----------|-------------|---------|-------------|
+| **Framework** | Next.js | 16.0.10 | Framework React avec App Router |
+| **Bibliothèque UI** | React | 19.2.0 | Dernière version avec Server Components |
+| **Langage** | TypeScript | 5.x | Typage statique strict |
+| **Styling** | Tailwind CSS | 4.1.9 | Framework CSS utility-first |
+| **HTTP Client** | Axios | 1.7.9 | Client HTTP avec interceptors |
+| **UI Components** | Radix UI | Latest | Composants accessibles headless |
+| **Icons** | Lucide React | 0.454.0 | Icônes SVG modernes |
+| **Forms** | React Hook Form | 7.60.0 | Gestion performante des formulaires |
+| **Validation** | Zod | 3.25.76 | Validation de schémas TypeScript |
+| **Charts** | Recharts | 2.15.4 | Graphiques React responsive |
+| **Notifications** | Sonner | 1.7.4 | Toast notifications élégantes |
+| **Dates** | date-fns | 4.1.0 | Manipulation des dates |
+| **Themes** | next-themes | 0.4.6 | Thème clair/sombre |
+| **OTP Input** | input-otp | 1.4.1 | Composant OTP accessible |
+
+### Bibliothèque de composants (shadcn/ui)
+
+L'application utilise **40+ composants** shadcn/ui :
+
+```
+Accordion • Alert • AlertDialog • AspectRatio • Avatar • Badge
+Breadcrumb • Button • ButtonGroup • Calendar • Card • Carousel
+Chart • Checkbox • Collapsible • Command • ContextMenu • Dialog
+Drawer • DropdownMenu • Form • HoverCard • Input • InputOTP
+Label • Menubar • NavigationMenu • Pagination • Popover • Progress
+RadioGroup • ResizablePanel • ScrollArea • Select • Separator
+Sheet • Sidebar • Skeleton • Slider • Sonner • Switch • Table
+Tabs • Textarea • Toast • Toggle • ToggleGroup • Tooltip
+```
+
+---
+
+## 🔐 Sécurité
+
+### Vue d'ensemble de la sécurité Frontend
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    COUCHES DE SÉCURITÉ FRONTEND                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. MIDDLEWARE SECURITY (middleware.ts)                                      │
+│     ├── Route Protection par cookies                                         │
+│     ├── Role-Based Access Control (RBAC)                                     │
+│     └── Security Headers Injection                                           │
+│                                                                              │
+│  2. SECURITY HEADERS                                                         │
+│     ├── Content-Security-Policy (CSP)                                        │
+│     ├── X-Content-Type-Options: nosniff                                      │
+│     ├── X-Frame-Options: DENY                                                │
+│     ├── X-XSS-Protection: 1; mode=block                                      │
+│     ├── Strict-Transport-Security (HSTS)                                     │
+│     ├── Referrer-Policy: strict-origin-when-cross-origin                     │
+│     └── Permissions-Policy (camera, microphone, geolocation disabled)        │
+│                                                                              │
+│  3. TOKEN MANAGEMENT                                                         │
+│     ├── Dual Storage (sessionStorage + cookies)                              │
+│     ├── SameSite=Lax cookies (CSRF protection)                               │
+│     ├── Session cookies (cleared on browser close)                           │
+│     └── Auto-cleanup on 401 errors                                           │
+│                                                                              │
+│  4. API SECURITY                                                             │
+│     ├── Auto Bearer Token injection                                          │
+│     ├── 401 Error interception + auto logout                                 │
+│     ├── 10s request timeout                                                  │
+│     └── Redirect loop prevention                                             │
+│                                                                              │
+│  5. INPUT VALIDATION                                                         │
+│     ├── TypeScript strict mode                                               │
+│     ├── Zod schema validation (disponible)                                   │
+│     ├── HTML5 native validation                                              │
+│     └── Client-side form validation                                          │
+│                                                                              │
+│  6. OTP SECURITY                                                             │
+│     ├── 6-digit numeric codes only                                           │
+│     ├── Auto-focus navigation                                                │
+│     ├── Paste support                                                        │
+│     └── 60s resend cooldown                                                  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1. Protection des routes (Middleware)
+
+Le middleware Next.js protège toutes les routes :
+
+```typescript
+// Routes publiques
+const PUBLIC_ROUTES = ["/", "/api"];
+
+// Routes admin uniquement
+const ADMIN_ROUTES = ["/admin"];
+
+// Routes client authentifié
+const CLIENT_ROUTES = ["/client"];
+```
+
+**Flux de protection :**
+1. ✅ Vérification du token dans les cookies
+2. ✅ Vérification du rôle utilisateur
+3. ✅ Redirection si non autorisé
+4. ✅ Injection des headers de sécurité
+
+### 2. Headers de sécurité HTTP
+
+| Header | Valeur | Protection |
+|--------|--------|------------|
+| `Content-Security-Policy` | Strict | Contrôle des ressources chargées |
+| `X-Content-Type-Options` | `nosniff` | Prévient MIME sniffing |
+| `X-Frame-Options` | `DENY` | Protection clickjacking |
+| `X-XSS-Protection` | `1; mode=block` | Filtre XSS navigateur |
+| `Strict-Transport-Security` | `max-age=31536000` | Force HTTPS |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Contrôle referer |
+| `Permissions-Policy` | Restrictif | Désactive caméra, micro, géoloc |
+
+### 3. Content Security Policy (CSP)
+
+```
+default-src 'self';
+script-src 'self' 'unsafe-inline' 'unsafe-eval';
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: blob:;
+font-src 'self' data:;
+connect-src 'self' http://localhost:8000 https://localhost:8000;
+```
+
+### 4. Gestion des tokens
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        STRATÉGIE DE STOCKAGE                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────────────┐          ┌─────────────────────────────────────┐   │
+│  │   sessionStorage    │          │            Cookies                   │   │
+│  │                     │          │                                      │   │
+│  │  • access_token     │          │  • access_token (SameSite=Lax)      │   │
+│  │  • user_role        │          │  • user_role (SameSite=Lax)         │   │
+│  │  • user_data        │          │                                      │   │
+│  │                     │          │  Session cookies (pas de max-age)   │   │
+│  │  Usage: API calls   │          │  Usage: Middleware route protection │   │
+│  │  via Axios          │          │  (côté serveur)                     │   │
+│  │                     │          │                                      │   │
+│  │  ✅ Non persistant   │          │  ✅ Protection CSRF (SameSite)       │   │
+│  │  ✅ Fermé avec tab   │          │  ✅ Accessible côté serveur         │   │
+│  └─────────────────────┘          └─────────────────────────────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 5. Flux d'authentification
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         FLUX D'AUTHENTIFICATION                               │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│  INSCRIPTION                                                                  │
+│  ───────────                                                                  │
+│                                                                               │
+│  1. Formulaire → POST /api/auth/                                              │
+│     (email, password, name, phone)                                            │
+│                                                                               │
+│  2. Backend stocke temporairement + envoie OTP email                          │
+│                                                                               │
+│  3. Page vérification OTP → 6 chiffres                                        │
+│     • Auto-focus entre les inputs                                             │
+│     • Support paste                                                           │
+│     • Cooldown resend 60s                                                     │
+│                                                                               │
+│  4. POST /api/auth/verify-email → Compte créé en DB                          │
+│                                                                               │
+│  CONNEXION                                                                    │
+│  ─────────                                                                    │
+│                                                                               │
+│  1. Formulaire → POST /api/auth/token                                         │
+│     (OAuth2 form: username=email, password)                                   │
+│                                                                               │
+│  2. Backend retourne JWT + rôle                                               │
+│                                                                               │
+│  3. Stockage token:                                                           │
+│     • sessionStorage (pour Axios)                                             │
+│     • Cookies (pour Middleware)                                               │
+│                                                                               │
+│  4. Redirection selon rôle:                                                   │
+│     • admin → /admin                                                          │
+│     • user → /client                                                          │
+│                                                                               │
+│  DÉCONNEXION                                                                  │
+│  ───────────                                                                  │
+│                                                                               │
+│  1. Clear sessionStorage                                                      │
+│  2. Expire cookies (max-age=0)                                                │
+│  3. Redirect → /                                                              │
+│                                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 6. Intercepteurs Axios
+
+```typescript
+// Request Interceptor
+- Ajoute automatiquement: Authorization: Bearer <token>
+
+// Response Interceptor
+- 401 Error → clearAuthData() + clearAuthCookies() + redirect "/"
+- Prévention des boucles de redirection
+```
+
+---
 
 ## 📦 Prérequis
 
-Avant de commencer, assurez-vous d'avoir installé :
+| Logiciel | Version | Installation |
+|----------|---------|--------------|
+| **Node.js** | 18+ | [nodejs.org](https://nodejs.org/) |
+| **pnpm** (recommandé) | 8+ | `npm install -g pnpm` |
+| **npm** (alternatif) | 9+ | Inclus avec Node.js |
+| **Git** | Latest | [git-scm.com](https://git-scm.com/) |
 
-- **Node.js** >= 18.x ([Télécharger](https://nodejs.org/))
-- **pnpm** >= 8.x (recommandé) ou **npm** >= 9.x ou **yarn** >= 1.22.x
-- **Git** ([Télécharger](https://git-scm.com/))
-
-Vérifiez vos versions :
-
+Vérification :
 ```bash
-node --version
-pnpm --version
+node --version   # v18.x ou supérieur
+pnpm --version   # v8.x ou supérieur
 ```
+
+---
 
 ## 🚀 Installation
 
 ### 1. Cloner le repository
-
 ```bash
-git clone https://github.com/EyaHaddad/Bank-Frontend.git
+git clone <repository-url>
 cd Bank-Frontend
 ```
 
-### 2. Configurer les variables d'environnement
+### 2. Variables d'environnement
 
-Créez un fichier `.env.local` à la racine du projet :
-
-```bash
-cp .env.example .env.local
-```
-
-Ou créez manuellement le fichier avec :
-
+Créer `.env.local` :
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_APP_NAME=BankFlow
 ```
 
 ### 3. Installer les dépendances
@@ -110,247 +479,210 @@ pnpm install
 npm install
 ```
 
-**Avec yarn :**
-```bash
-yarn install
-```
+---
 
 ## ▶️ Démarrage
 
 ### Mode Développement
-
-Lance le serveur de développement avec rechargement automatique :
-
 ```bash
-# Avec npm
-npm run dev
-
-# Avec pnpm
 pnpm dev
-
-# Avec yarn
-yarn dev
+# ou
+npm run dev
 ```
-
-🌐 Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
+🌐 Ouvrir [http://localhost:3000](http://localhost:3000)
 
 ### Mode Production
 
-#### 1. Construire l'application
-
 ```bash
-# Avec npm
-npm run build
-
-# Avec pnpm
+# Build
 pnpm build
 
-# Avec yarn
-yarn build
-```
-
-#### 2. Démarrer le serveur de production
-
-```bash
-# Avec npm
-npm run start
-
-# Avec pnpm
+# Start
 pnpm start
-
-# Avec yarn
-yarn start
 ```
 
-### Vérification du code (Lint)
+### Scripts disponibles
 
-```bash
-npm run lint
-```
+| Commande | Description |
+|----------|-------------|
+| `pnpm dev` | Serveur de développement (hot reload) |
+| `pnpm build` | Build de production |
+| `pnpm start` | Serveur de production |
+| `pnpm lint` | Vérification ESLint |
+
+---
 
 ## 📁 Structure du projet
 
 ```
 Bank-Frontend/
-├── app/                        # App Router (Next.js 13+)
-│   ├── layout.tsx              # Layout principal
-│   ├── page.tsx                # Page de connexion
-│   ├── admin/                  # Espace administrateur
-│   │   ├── page.tsx            # Dashboard admin
-│   │   ├── accounts/           # Gestion des comptes
-│   │   ├── users/              # Gestion des utilisateurs
-│   │   ├── exchange-rates/     # Taux de change
-│   │   ├── relationships/      # Relations
-│   │   ├── requests/           # Demandes
-│   │   └── settings/           # Paramètres
-│   └── client/                 # Espace client
-│       ├── page.tsx            # Dashboard client
-│       ├── beneficiaries/      # Bénéficiaires
-│       ├── contact/            # Contact
-│       ├── exchange-rates/     # Taux de change
-│       ├── profile/            # Profil
-│       ├── statements/         # Relevés
-│       ├── transactions/       # Transactions
-│       └── transfer/           # Virements
-├── components/                 # Composants réutilisables
-│   ├── ui/                     # Composants UI (shadcn/ui)
-│   ├── dashboard-sidebar.tsx   # Barre latérale
-│   ├── stat-card.tsx           # Carte statistique
-│   └── theme-provider.tsx      # Provider de thème
-├── hooks/                      # Hooks personnalisés
-│   ├── useAuth.ts              # Gestion authentification
-│   ├── useMobile.ts            # Détection mobile
-│   └── useToast.ts             # Notifications
-├── lib/                        # Utilitaires
-│   └── utils.ts                # Fonctions utilitaires
-├── services/                   # Services API
-│   ├── axiosInstance.ts        # Instance Axios configurée
-│   ├── auth.service.ts         # Service authentification
-│   ├── users.service.ts        # Service utilisateurs
-│   ├── accounts.service.ts     # Service comptes
-│   ├── transactions.service.ts # Service transactions
-│   ├── transfers.service.ts    # Service virements
-│   ├── beneficiaries.service.ts# Service bénéficiaires
-│   ├── notifications.service.ts# Service notifications
-│   ├── otps.service.ts         # Service OTP
-│   ├── admin.service.ts        # Service admin
-│   └── index.ts                # Export centralisé
-├── types/                      # Types TypeScript
-│   ├── account.ts              # Types compte
-│   ├── auth.ts                 # Types authentification
-│   ├── beneficiary.ts          # Types bénéficiaire
-│   ├── notification.ts         # Types notification
-│   ├── otp.ts                  # Types OTP
-│   ├── transaction.ts          # Types transaction
-│   ├── transfer.ts             # Types virement
-│   ├── user.ts                 # Types utilisateur
-│   └── index.ts                # Export centralisé
-├── styles/                     # Styles additionnels
-│   └── globals.css             # Styles globaux
-├── public/                     # Fichiers statiques
-├── middleware.ts               # Middleware Next.js (auth)
-├── next.config.mjs             # Configuration Next.js
-├── package.json                # Dépendances
-├── tsconfig.json               # Configuration TypeScript
-├── postcss.config.mjs          # Configuration PostCSS
-└── components.json             # Configuration shadcn/ui
+├── app/                          # App Router Next.js 16
+│   ├── layout.tsx                # Layout racine + providers
+│   ├── page.tsx                  # Page de connexion (/)
+│   │
+│   ├── admin/                    # 🔐 Espace Admin (role: admin)
+│   │   ├── page.tsx              # Dashboard administrateur
+│   │   ├── accounts/             # Gestion des comptes
+│   │   │   └── page.tsx
+│   │   └── users/                # Gestion des utilisateurs
+│   │       └── page.tsx
+│   │
+│   └── client/                   # 🔐 Espace Client (role: user)
+│       ├── page.tsx              # Dashboard client
+│       ├── accounts/             # Mes comptes
+│       ├── beneficiaries/        # Mes bénéficiaires
+│       ├── contact/              # Support client
+│       ├── exchange-rates/       # Taux de change
+│       ├── profile/              # Mon profil
+│       ├── statements/           # Mes relevés
+│       ├── transactions/         # Historique transactions
+│       └── transfer/             # Effectuer un virement
+│
+├── components/                   # Composants React
+│   ├── ui/                       # 40+ composants shadcn/ui
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── dialog.tsx
+│   │   ├── input.tsx
+│   │   ├── input-otp.tsx
+│   │   ├── table.tsx
+│   │   └── ... (35+ autres)
+│   ├── dashboard-sidebar.tsx     # Navigation latérale
+│   ├── stat-card.tsx             # Cartes statistiques
+│   └── theme-provider.tsx        # Provider thème
+│
+├── hooks/                        # Hooks personnalisés
+│   ├── useAuth.ts                # Gestion authentification
+│   ├── useMobile.ts              # Détection mobile
+│   └── useToast.ts               # Notifications toast
+│
+├── lib/                          # Utilitaires
+│   └── utils.ts                  # Fonctions helper (cn, etc.)
+│
+├── services/                     # Services API
+│   ├── axiosInstance.ts          # Instance Axios configurée
+│   ├── auth.service.ts           # Authentification
+│   ├── users.service.ts          # Utilisateurs
+│   ├── accounts.service.ts       # Comptes
+│   ├── transactions.service.ts   # Transactions
+│   ├── transfers.service.ts      # Virements
+│   ├── beneficiaries.service.ts  # Bénéficiaires
+│   ├── notifications.service.ts  # Notifications
+│   ├── otps.service.ts           # OTP
+│   ├── admin.service.ts          # Admin
+│   ├── currency.service.ts       # Taux de change
+│   └── index.ts                  # Export centralisé
+│
+├── types/                        # Types TypeScript
+│   ├── auth.ts                   # Types authentification
+│   ├── user.ts                   # Types utilisateur
+│   ├── account.ts                # Types compte
+│   ├── transaction.ts            # Types transaction
+│   ├── transfer.ts               # Types virement
+│   ├── beneficiary.ts            # Types bénéficiaire
+│   ├── notification.ts           # Types notification
+│   ├── otp.ts                    # Types OTP
+│   └── index.ts                  # Export centralisé
+│
+├── styles/
+│   └── globals.css               # Styles globaux Tailwind
+│
+├── public/                       # Assets statiques
+│
+├── middleware.ts                 # 🔐 Middleware sécurité
+├── next.config.mjs               # Configuration Next.js
+├── tailwind.config.ts            # Configuration Tailwind
+├── tsconfig.json                 # Configuration TypeScript
+├── components.json               # Configuration shadcn/ui
+└── package.json                  # Dépendances
 ```
+
+---
 
 ## 🔌 Services API
 
-L'application utilise une architecture de services modulaire avec Axios :
+### Architecture des services
 
-| Service | Description |
-|---------|-------------|
-| `axiosInstance.ts` | Instance Axios avec interceptors (auth, erreurs) |
-| `auth.service.ts` | Inscription, connexion, vérification OTP |
-| `users.service.ts` | Gestion des profils utilisateurs |
-| `accounts.service.ts` | Opérations sur les comptes bancaires |
-| `transactions.service.ts` | Historique des transactions |
-| `transfers.service.ts` | Création et suivi des virements |
-| `beneficiaries.service.ts` | Gestion des bénéficiaires |
-| `notifications.service.ts` | Notifications utilisateur |
-| `otps.service.ts` | Génération et vérification OTP |
-| `admin.service.ts` | Fonctionnalités administrateur |
+| Service | Description | Endpoints principaux |
+|---------|-------------|---------------------|
+| `axiosInstance.ts` | Instance configurée avec interceptors | Base configuration |
+| `auth.service.ts` | Inscription, connexion, OTP | `/auth/*` |
+| `users.service.ts` | Profil, CRUD utilisateurs | `/users/*` |
+| `accounts.service.ts` | Gestion des comptes | `/accounts/*` |
+| `transactions.service.ts` | Historique transactions | `/transactions/*` |
+| `transfers.service.ts` | Virements | `/transfers/*` |
+| `beneficiaries.service.ts` | Bénéficiaires | `/beneficiaries/*` |
+| `notifications.service.ts` | Notifications | `/notifications/*` |
+| `otps.service.ts` | Codes OTP | `/otps/*` |
+| `admin.service.ts` | Administration | `/admin/*` |
+| `currency.service.ts` | Taux de change | `/currency/*` |
+
+### Exemple d'utilisation
+
+```typescript
+import { authService, accountsService } from '@/services';
+
+// Connexion
+const { access_token, role } = await authService.login(email, password);
+
+// Récupérer mes comptes
+const accounts = await accountsService.getMyAccounts();
+```
+
+---
+
+## ⚙️ Configuration
+
+### Variables d'environnement
+
+| Variable | Description | Valeur par défaut |
+|----------|-------------|-------------------|
+| `NEXT_PUBLIC_API_URL` | URL de l'API backend | `http://localhost:8000/api` |
+| `NEXT_PUBLIC_APP_NAME` | Nom de l'application | `BankFlow` |
+
+### Configuration Axios
+
+```typescript
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  headers: { "Content-Type": "application/json" },
+  timeout: 10000,  // 10 secondes
+});
+```
+
+---
 
 ## 🔑 Comptes de démonstration
 
-L'application inclut des comptes de démonstration pour tester les fonctionnalités :
-
 | Rôle | Email | Mot de passe |
 |------|-------|--------------|
-| **Administrateur** | `admin@example.com` | `admin123` |
-| **Client** | `client@example.com` | `client123` |
+| **Administrateur** | `admin@example.com` | `Admin123!@#` |
+| **Client** | `client@example.com` | `Client123!@#` |
 
-## ⚙️ Configuration API
+> ⚠️ Comptes de test uniquement. En production, utilisez des comptes réels.
 
-L'application communique avec un backend FastAPI via une API REST. La configuration utilise les variables d'environnement et Axios avec interceptors.
+---
 
-### URL de base de l'API
+## 🔗 Projet associé
 
-L'URL est configurée via la variable d'environnement `NEXT_PUBLIC_API_URL` dans le fichier `.env.local` :
+Ce frontend communique avec le backend FastAPI :
+- **Backend** : [Bank-Backend](../Bank-Backend)
 
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
-```
-
-### Fonctionnalités de l'instance Axios
-
-- **Interceptor de requête** : Ajoute automatiquement le token JWT aux headers
-- **Interceptor de réponse** : Gère les erreurs 401 et redirige vers la connexion
-- **Timeout** : 10 secondes par défaut
-- **Stockage** : Tokens stockés dans `sessionStorage`
-
-### Modifier l'URL de l'API
-
-Pour pointer vers un autre backend, modifiez la variable `NEXT_PUBLIC_API_URL` dans le fichier `.env.local`.
-
-### Endpoints disponibles
-
-| Endpoint | Méthode | Description |
-|----------|---------|-------------|
-| `/auth/` | POST | Initier l'inscription (envoie OTP par email) |
-| `/auth/verify-email` | POST | Vérifier email avec code OTP |
-| `/auth/resend-otp` | POST | Renvoyer le code de vérification |
-| `/auth/token` | POST | Connexion (retourne JWT) |
-| `/users/me` | GET | Profil utilisateur connecté |
-| `/users` | GET | Liste des utilisateurs (admin) |
-| `/accounts/me` | GET | Compte de l'utilisateur connecté |
-| `/accounts` | GET | Liste des comptes (admin) |
-| `/transactions` | GET | Historique des transactions |
-| `/transfers` | POST | Créer un virement |
-| `/beneficiaries` | GET/POST | Gestion des bénéficiaires |
-| `/notifications` | GET | Notifications utilisateur |
-
-## 🔧 Variables d'environnement
-
-Créez un fichier `.env.local` à la racine du projet :
-
-```env
-# URL de l'API Backend (obligatoire)
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
-
-# Nom de l'application (optionnel)
-NEXT_PUBLIC_APP_NAME=BankFlow
-```
-
-> **Note** : Les variables préfixées par `NEXT_PUBLIC_` sont exposées au navigateur. Utilisez `.env.local` pour le développement local (ce fichier est ignoré par Git).
-
-## 📝 Scripts disponibles
-
-| Commande | Description |
-|----------|-------------|
-| `pnpm dev` | Démarre le serveur de développement |
-| `pnpm build` | Compile l'application pour la production |
-| `pnpm start` | Démarre le serveur de production |
-| `pnpm lint` | Vérifie le code avec ESLint |
-
-## 🔒 Authentification
-
-L'application utilise JWT (JSON Web Tokens) pour l'authentification :
-
-1. **Inscription** : L'utilisateur s'inscrit et reçoit un code OTP par email
-2. **Vérification** : Le code OTP est vérifié pour activer le compte
-3. **Connexion** : L'utilisateur se connecte et reçoit un token JWT
-4. **Sessions** : Le token est stocké dans `sessionStorage` et envoyé automatiquement avec chaque requête
-5. **Middleware** : Protection des routes via `middleware.ts`
+---
 
 ## 🤝 Contribution
 
-1. Forkez le projet
-2. Créez une branche (`git checkout -b feature/nouvelle-fonctionnalite`)
-3. Committez vos changements (`git commit -m 'Ajout d'une nouvelle fonctionnalité'`)
-4. Poussez vers la branche (`git push origin feature/nouvelle-fonctionnalite`)
-5. Ouvrez une Pull Request
+1. Fork le repository
+2. Créer une branche (`git checkout -b feature/nouvelle-fonctionnalite`)
+3. Commiter (`git commit -m 'feat: ajout nouvelle fonctionnalité'`)
+4. Push (`git push origin feature/nouvelle-fonctionnalite`)
+5. Créer une Pull Request
 
-## � Projet associé
+---
 
-Ce frontend fonctionne avec le backend FastAPI disponible ici :
-- **Backend** : [Bank-Backend](https://github.com/EyaHaddad/Bank-Backend)
+## 📝 Licence
 
-## 📄 Licence
-
-Ce projet est développé dans le cadre d'un projet académique - ING-2 Sécurité Informatique.
+Ce projet est développé dans le cadre du cours de **Sécurité Informatique - ING-2**.
 
 ---
 
@@ -358,6 +690,6 @@ Ce projet est développé dans le cadre d'un projet académique - ING-2 Sécurit
 
 **Développé avec ❤️ pour le projet d'Application Bancaire**
 
-*Décembre 2025*
+*Janvier 2026*
 
 </div>

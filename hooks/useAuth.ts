@@ -87,7 +87,7 @@ export function useAuth(): UseAuthReturn {
         await fetchUser();
 
         // Redirect based on role
-        if (token.role === "admin") {
+        if (token.role === "ADMIN") {
           router.push("/admin");
         } else {
           router.push("/client");

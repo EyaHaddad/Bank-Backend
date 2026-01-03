@@ -3,8 +3,6 @@ import type {
   Account,
   AccountCreate,
   AccountUpdate,
-  DepositRequest,
-  WithdrawRequest,
   AccountTransferRequest,
   BalanceResponse,
 } from "@/types/account";
@@ -20,7 +18,7 @@ export async function getMyAccounts(): Promise<Account[]> {
 }
 
 /**
- * Create a new account for the current user
+ * Create a new account for the current user (always TND currency)
  */
 export async function createAccount(data: AccountCreate): Promise<Account> {
   const response = await api.post<Account>("/accounts/", data);
@@ -53,36 +51,14 @@ export async function deleteAccount(accountId: string): Promise<void> {
   await api.delete(`/accounts/${accountId}`);
 }
 
-/**
- * Deposit money into an account
- */
-export async function deposit(
-  accountId: string,
-  data: DepositRequest
-): Promise<Account> {
-  const response = await api.post<Account>(
-    `/accounts/${accountId}/deposit`,
-    data
-  );
-  return response.data;
-}
+// NOTE: Deposit and Withdraw functions have been removed.
+// Clients cannot directly deposit/withdraw money.
+// Money can only be:
+// 1. Transferred between the client's own accounts (below function)
+// 2. Sent to beneficiaries via the transfers service
 
 /**
- * Withdraw money from an account
- */
-export async function withdraw(
-  accountId: string,
-  data: WithdrawRequest
-): Promise<Account> {
-  const response = await api.post<Account>(
-    `/accounts/${accountId}/withdraw`,
-    data
-  );
-  return response.data;
-}
-
-/**
- * Transfer money between accounts
+ * Transfer money between the client's own accounts
  */
 export async function transferBetweenAccounts(
   accountId: string,

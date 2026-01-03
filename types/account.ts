@@ -1,28 +1,22 @@
 // Account types matching backend schemas
 
 export interface AccountCreate {
-  currency?: string;
   initial_balance?: number;
 }
 
 export interface AccountUpdate {
-  currency?: string;
+  // No updateable fields - currency is always TND
 }
 
 export interface Account {
   id: string;
   user_id: string;
   balance: number;
-  currency: string;
+  currency: string; // Always "TND"
 }
 
-export interface DepositRequest {
-  amount: number;
-}
-
-export interface WithdrawRequest {
-  amount: number;
-}
+// NOTE: DepositRequest and WithdrawRequest have been removed.
+// Clients cannot directly deposit/withdraw money.
 
 export interface AccountTransferRequest {
   target_account_id: string;
