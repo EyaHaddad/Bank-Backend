@@ -7,7 +7,7 @@ from typing import Optional
 
 class AccountBase(BaseModel):
     """Base schema for account data."""
-    currency: str = Field(default="TND", description="Currency code (e.g., TND, EUR, USD)")
+    pass  # Currency is always TND, no need to specify
 
 
 class AccountCreate(AccountBase):
@@ -16,8 +16,8 @@ class AccountCreate(AccountBase):
 
 
 class AccountUpdate(BaseModel):
-    """Schema for updating an account."""
-    currency: Optional[str] = Field(default=None, description="New currency code")
+    """Schema for updating an account - currently no fields can be updated."""
+    pass  # No updateable fields - currency is always TND
 
 
 class AccountResponse(AccountBase):
@@ -25,25 +25,20 @@ class AccountResponse(AccountBase):
     id: UUID
     user_id: UUID
     balance: float
+    currency: str = Field(default="TND", description="Currency code (always TND)")
 
     model_config = {
         "from_attributes": True
     }
 
 
-class DepositRequest(BaseModel):
-    """Schema for deposit request."""
-    amount: float = Field(..., gt=0, description="Amount to deposit (must be positive)")
-
-
-class WithdrawRequest(BaseModel):
-    """Schema for withdrawal request."""
-    amount: float = Field(..., gt=0, description="Amount to withdraw (must be positive)")
+# NOTE: DepositRequest and WithdrawRequest have been removed.
+# Clients cannot directly deposit/withdraw money.
 
 
 class TransferRequest(BaseModel):
-    """Schema for transfer request between accounts."""
-    target_account_id: UUID = Field(..., description="Target account ID for the transfer")
+    """Schema for transfer request between the client's own accounts."""
+    target_account_id: UUID = Field(..., description="Target account ID for the transfer (must be owned by same user)")
     amount: float = Field(..., gt=0, description="Amount to transfer (must be positive)")
 
 
@@ -51,4 +46,4 @@ class BalanceResponse(BaseModel):
     """Schema for balance response."""
     account_id: UUID
     balance: float
-    currency: str
+    currency: str = Field(default="TND", description="Currency code (always TND)")

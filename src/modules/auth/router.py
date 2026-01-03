@@ -60,7 +60,8 @@ async def register_user(
         last_name=register_user_request.last_name,
         email=register_user_request.email,
         phone=None,  # Add phone if needed
-        password_hash=password_hash
+        password_hash=password_hash,
+        role=register_user_request.role
     )
     
     # Send OTP email
@@ -133,6 +134,7 @@ async def verify_email(
             email=pending.email,
             phone=pending.phone,
             password_hash=pending.password_hash,
+            role=pending.role,
             is_email_verified=True,  # Already verified!
         )
         db.add(new_user)

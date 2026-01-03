@@ -1,7 +1,7 @@
 """Admin module exceptions."""
 
 from fastapi import HTTPException
-from starlette.status import HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
+from starlette.status import HTTP_403_FORBIDDEN
 
 
 class AdminAccessDeniedError(HTTPException):
@@ -14,21 +14,6 @@ class AdminAccessDeniedError(HTTPException):
         )
 
 
-class UserNotFoundError(HTTPException):
-    """Exception raised when the target user is not found."""
-    
-    def __init__(self, user_id: str):
-        super().__init__(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=f"User with id {user_id} not found."
-        )
-
-
-class UserAlreadyAdminError(HTTPException):
-    """Exception raised when trying to promote a user who is already an admin."""
-    
-    def __init__(self, user_id: str):
-        super().__init__(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail=f"User with id {user_id} is already an admin."
-        )
+# Note: User and Account exceptions have been moved to their respective modules:
+# - UserNotFoundError, UserAlreadyActiveError, etc. -> src/modules/auth/exceptions.py
+# - AccountNotFoundError, AccountAlreadyActiveError, etc. -> src/modules/accounts/exceptions.py

@@ -5,12 +5,11 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query
 
 from src.modules.auth.service import CurrentUser
 from src.infrastructure.database import DbSession
 from src.models.transaction import TransactionType, TransactionStatus
-from src.modules.notifications.service import send_transaction_notification_helper
 
 from . import schemas
 from .service import TransactionService
@@ -25,64 +24,11 @@ def get_transaction_service(db: DbSession) -> TransactionService:
     return TransactionService(db)
 
 
-@router.post("/credit", response_model=schemas.TransactionResponse, status_code=status.HTTP_201_CREATED)
-def credit_account(
-    request: schemas.CreditRequest,
-    current_user: CurrentUser,
-    db: DbSession,
-    service: TransactionService = Depends(get_transaction_service),
-) -> schemas.TransactionResponse:
-    """
-    Credit (deposit) money to an account.
-    
-    This endpoint allows the authenticated user to deposit money into their account.
-    """
-    logger.info(f"User {current_user.user_id} requesting credit to account {request.account_id}")
-    transaction = service.credit(current_user.get_uuid(), request)
-    
-    # Send notification
-    try:
-        send_transaction_notification_helper(
-            db=db,
-            user_id=current_user.get_uuid(),
-            transaction_type="credit",
-            amount=request.amount,
-            reference=transaction.reference,
-        )
-    except Exception as e:
-        logger.warning(f"Failed to send transaction notification: {str(e)}")
-    
-    return transaction
-
-
-@router.post("/debit", response_model=schemas.TransactionResponse, status_code=status.HTTP_201_CREATED)
-def debit_account(
-    request: schemas.DebitRequest,
-    current_user: CurrentUser,
-    db: DbSession,
-    service: TransactionService = Depends(get_transaction_service),
-) -> schemas.TransactionResponse:
-    """
-    Debit (withdraw) money from an account.
-    
-    This endpoint allows the authenticated user to withdraw money from their account.
-    """
-    logger.info(f"User {current_user.user_id} requesting debit from account {request.account_id}")
-    transaction = service.debit(current_user.get_uuid(), request)
-    
-    # Send notification
-    try:
-        send_transaction_notification_helper(
-            db=db,
-            user_id=current_user.get_uuid(),
-            transaction_type="debit",
-            amount=request.amount,
-            reference=transaction.reference,
-        )
-    except Exception as e:
-        logger.warning(f"Failed to send transaction notification: {str(e)}")
-    
-    return transaction
+# NOTE: Credit and Debit endpoints have been removed.
+# Clients cannot directly credit/debit their accounts.
+# Money can only be:
+# 1. Transferred between the client's own accounts
+# 2. Sent to beneficiaries via the transfers module
 
 
 @router.get("/{transaction_id}", response_model=schemas.TransactionResponse)

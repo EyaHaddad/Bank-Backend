@@ -99,6 +99,7 @@ def register_user(db: Session, register_user_request: RegisterUserRequest) -> Us
             firstname=register_user_request.first_name,
             lastname=register_user_request.last_name,
             email=register_user_request.email,
+            role=register_user_request.role,
             password_hash=get_password_hash(register_user_request.password),
         )
         db.add(create_user_model)

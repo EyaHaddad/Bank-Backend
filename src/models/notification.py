@@ -26,10 +26,10 @@ class Notification(BaseEntity):
     title = Column(String, nullable=False)
     content = Column(Text, nullable=False)
     sent_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Relationship to User
-    user = relationship("User", back_populates="notifications", cascade="all, delete-orphan")
+    user = relationship("User", back_populates="notifications")
 
     def __repr__(self) -> str:
         return f"<Notification(id={self.id}, type={self.type}, title={self.title}, user_id={self.user_id})>"

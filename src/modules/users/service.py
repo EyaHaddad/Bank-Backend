@@ -7,12 +7,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from . import schemas
-from src.models.user import User
+from src.models.user import User, Role
 from src.modules.auth.exceptions import (
     InvalidPasswordError,
     PasswordMismatchError,
     UserNotFoundError,
     DuplicateEmailError,
+    UserAlreadyActiveError,
+    UserAlreadyInactiveError,
+    CannotModifySelfError,
 )
 from src.modules.auth.service import get_password_hash, verify_password
 
@@ -64,6 +67,7 @@ class UserService:
                 firstname=user.firstname,
                 lastname=user.lastname,
                 email=user.email,
+                role=user.role,
                 password_hash=get_password_hash(user.password),
             )
             self._db.add(new_user)
@@ -121,3 +125,98 @@ class UserService:
             logger.info(f"Password change notification sent to user {user_id}")
         except Exception as e:
             logger.error(f"Failed to send password change notification: {str(e)}")
+
+    # ==================== ADMIN OPERATIONS ====================
+
+    def activate_user(self, user_id: UUID) -> User:
+        """Activate a user account (admin operation)."""
+        user = self.get_user_by_id(user_id)
+        
+        if user.is_active:
+            raise UserAlreadyActiveError(user_id)
+        
+        user.is_active = True
+        self._db.commit()
+        self._db.refresh(user)
+        
+        logger.info(f"User {user_id} activated")
+        return user
+
+    def deactivate_user(self, user_id: UUID, current_user_id: UUID) -> User:
+        """Deactivate a user account (admin operation)."""
+        if user_id == current_user_id:
+            raise CannotModifySelfError("deactivate")
+        
+        user = self.get_user_by_id(user_id)
+        
+        if not user.is_active:
+            raise UserAlreadyInactiveError(user_id)
+        
+        user.is_active = False
+        self._db.commit()
+        self._db.refresh(user)
+        
+        logger.info(f"User {user_id} deactivated")
+        return user
+
+    def admin_delete_user(self, user_id: UUID, current_user_id: UUID) -> bool:
+        """Delete a user and all their data (admin operation)."""
+        if user_id == current_user_id:
+            raise CannotModifySelfError("delete")
+        
+        user = self.get_user_by_id(user_id)
+        self._db.delete(user)
+        self._db.commit()
+        
+        logger.info(f"User {user_id} deleted by admin")
+        return True
+
+    def admin_update_user(self, user_id: UUID, firstname: str = None, lastname: str = None, email: str = None) -> User:
+        """Update a user's information (admin operation)."""
+        user = self.get_user_by_id(user_id)
+        
+        if firstname:
+            user.firstname = firstname
+        if lastname:
+            user.lastname = lastname
+        if email:
+            user.email = email
+        
+        self._db.commit()
+        self._db.refresh(user)
+        
+        logger.info(f"User {user_id} updated by admin")
+        return user
+
+    def promote_to_admin(self, user_id: UUID) -> User:
+        """Promote a user to admin role."""
+        user = self.get_user_by_id(user_id)
+        
+        if user.role == Role.ADMIN:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=400, detail=f"User {user_id} is already an admin")
+        
+        user.role = Role.ADMIN
+        self._db.commit()
+        self._db.refresh(user)
+        
+        logger.info(f"User {user_id} promoted to admin")
+        return user
+
+    def demote_to_user(self, user_id: UUID, current_user_id: UUID) -> User:
+        """Demote an admin to regular user role."""
+        if user_id == current_user_id:
+            raise CannotModifySelfError("demote")
+        
+        user = self.get_user_by_id(user_id)
+        
+        if user.role == Role.USER:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=400, detail=f"User {user_id} is already a regular user")
+        
+        user.role = Role.USER
+        self._db.commit()
+        self._db.refresh(user)
+        
+        logger.info(f"Admin {user_id} demoted to user")
+        return user

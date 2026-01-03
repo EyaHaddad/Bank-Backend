@@ -27,7 +27,7 @@ class Transaction(BaseEntity):
     __tablename__ = "transactions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
-    sender_account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=False, index=True)
+    sender_account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True)
     #reference pour les transactions TR_1
     reference = Column(String, nullable=True)
     type = Column(Enum(TransactionType), nullable=False)
@@ -42,7 +42,7 @@ class Transaction(BaseEntity):
     
     # Relationships
     # When an Account is deleted, all their Transactions are also deleted
-    sender_account = relationship("Account", foreign_keys=[sender_account_id], cascade="all, delete-orphan")
+    sender_account = relationship("Account", foreign_keys=[sender_account_id])
 
     def __repr__(self) -> str:
         return f"<Transaction(id={self.id}, type={self.type}, status={self.status}, amount={self.amount})>"

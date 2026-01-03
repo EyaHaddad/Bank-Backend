@@ -75,28 +75,11 @@ def delete_account(
     service.delete_account(account_id, current_user.get_uuid())
 
 
-@router.post("/{account_id}/deposit", response_model=schemas.AccountResponse)
-def deposit(
-    account_id: UUID,
-    deposit_data: schemas.DepositRequest,
-    current_user: CurrentUser,
-    service: AccountService = Depends(get_account_service)
-) -> schemas.AccountResponse:
-    """Deposit money into an account."""
-    logger.info(f"Depositing {deposit_data.amount} to account {account_id}")
-    return service.deposit(account_id, current_user.get_uuid(), deposit_data.amount)
-
-
-@router.post("/{account_id}/withdraw", response_model=schemas.AccountResponse)
-def withdraw(
-    account_id: UUID,
-    withdraw_data: schemas.WithdrawRequest,
-    current_user: CurrentUser,
-    service: AccountService = Depends(get_account_service)
-) -> schemas.AccountResponse:
-    """Withdraw money from an account."""
-    logger.info(f"Withdrawing {withdraw_data.amount} from account {account_id}")
-    return service.withdraw(account_id, current_user.get_uuid(), withdraw_data.amount)
+# NOTE: Deposit and Withdraw endpoints have been removed.
+# Clients cannot directly deposit/withdraw money.
+# Money can only be:
+# 1. Transferred between the client's own accounts (below endpoint)
+# 2. Sent to beneficiaries via the transfers module
 
 
 @router.post("/{account_id}/transfer", response_model=schemas.AccountResponse)
@@ -106,7 +89,7 @@ def transfer(
     current_user: CurrentUser,
     service: AccountService = Depends(get_account_service)
 ) -> schemas.AccountResponse:
-    """Transfer money between accounts."""
+    """Transfer money between the client's own accounts."""
     logger.info(f"Transferring {transfer_data.amount} from account {account_id} to {transfer_data.target_account_id}")
     return service.transfer(account_id, current_user.get_uuid(), transfer_data.target_account_id, transfer_data.amount)
 

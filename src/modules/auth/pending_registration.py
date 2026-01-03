@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from typing import Optional
 import threading
 
+from src.models.user import Role
+
 @dataclass
 class PendingRegistration:
     """Data for a pending registration."""
@@ -17,6 +19,7 @@ class PendingRegistration:
     password_hash: str
     otp_code: str
     otp_expires_at: datetime
+    role: Role = Role.USER
     attempts: int = 0
     max_attempts: int = 3
     created_at: datetime = None
@@ -63,7 +66,7 @@ class PendingRegistrationStore:
         """Create a hash key from email."""
         return hashlib.sha256(email.lower().encode()).hexdigest()
     
-    def add(self, first_name: str, last_name: str, email: str, phone: Optional[str], password_hash: str) -> str:
+    def add(self, first_name: str, last_name: str, email: str, phone: Optional[str], password_hash: str, role: Role = Role.USER) -> str:
         """Add a pending registration and return the OTP code."""
         otp_code = self._generate_otp()
         key = self._hash_email(email)
@@ -76,6 +79,7 @@ class PendingRegistrationStore:
             password_hash=password_hash,
             otp_code=otp_code,
             otp_expires_at=datetime.utcnow() + timedelta(minutes=10),
+            role=role,
         )
         
         with self._lock:

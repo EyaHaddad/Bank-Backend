@@ -25,7 +25,7 @@ class OTP(BaseEntity):
     __tablename__ = "otps"
 
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     code = Column(String(10), nullable=False)
     purpose = Column(Enum(OTPPurpose), nullable=False)
     is_used = Column(Boolean, default=False, nullable=False)
@@ -36,7 +36,7 @@ class OTP(BaseEntity):
 
     # Relationship to User
     # When a User is deleted, all their OTPs are also deleted
-    user = relationship("User", back_populates="otp_codes", cascade="all, delete-orphan")
+    user = relationship("User", back_populates="otp_codes")
 
     def __repr__(self) -> str:
         return f"<OTP(id={self.id}, user_id={self.user_id}, purpose={self.purpose}, is_used={self.is_used})>"

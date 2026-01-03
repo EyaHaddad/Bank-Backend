@@ -50,3 +50,26 @@ class InvalidCredentialError(HTTPException):
 
     def __init__(self):
         super().__init__(status_code=401, detail="Invalid credentials")
+
+
+class UserAlreadyActiveError(UserError):
+    """Exception raised when trying to activate an already active user."""
+
+    def __init__(self, user_id=None):
+        message = "User is already active" if user_id is None else f"User {user_id} is already active"
+        super().__init__(status_code=400, detail=message)
+
+
+class UserAlreadyInactiveError(UserError):
+    """Exception raised when trying to deactivate an already inactive user."""
+
+    def __init__(self, user_id=None):
+        message = "User is already inactive" if user_id is None else f"User {user_id} is already inactive"
+        super().__init__(status_code=400, detail=message)
+
+
+class CannotModifySelfError(UserError):
+    """Exception raised when a user tries to modify their own account in restricted ways."""
+
+    def __init__(self, action: str = "perform this action on"):
+        super().__init__(status_code=400, detail=f"Cannot {action} your own account")

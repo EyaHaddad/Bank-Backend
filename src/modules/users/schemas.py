@@ -3,6 +3,9 @@
 from pydantic import BaseModel, EmailStr
 from uuid import UUID
 from typing import Optional
+from datetime import datetime
+
+from src.models.user import Role
 
 
 class UserBase(BaseModel):
@@ -13,6 +16,9 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    role: Role = Role.USER
 
 
 class UserUpdate(BaseModel):
@@ -23,6 +29,10 @@ class UserUpdate(BaseModel):
 
 class UserResponseModel(UserBase):
     id: UUID
+    phone: Optional[str] = None
+    role: Role
+    is_active: bool
+    created_at: datetime
 
     model_config = {
         "from_attributes": True

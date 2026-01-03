@@ -3,12 +3,15 @@
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field
 
+from src.models.user import Role
+
 
 class RegisterUserRequest(BaseModel):
     """Model for user registration request."""
     first_name: str
     last_name: str
     email: EmailStr
+    role: Role = Role.USER
     password: str
     confirm_password: str
 

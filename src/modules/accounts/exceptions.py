@@ -43,3 +43,26 @@ class DuplicateAccountError(AccountError):
 
     def __init__(self, message: str = "Account already exists"):
         super().__init__(status_code=409, detail=message)
+
+
+class AccountAlreadyActiveError(AccountError):
+    """Exception raised when trying to activate an already active account."""
+
+    def __init__(self, account_id=None):
+        message = "Account is already active" if account_id is None else f"Account {account_id} is already active"
+        super().__init__(status_code=400, detail=message)
+
+
+class AccountAlreadyBlockedError(AccountError):
+    """Exception raised when trying to block an already blocked account."""
+
+    def __init__(self, account_id=None):
+        message = "Account is already blocked" if account_id is None else f"Account {account_id} is already blocked"
+        super().__init__(status_code=400, detail=message)
+
+
+class AccountClosedError(AccountError):
+    """Exception raised when trying to perform operations on a closed account."""
+
+    def __init__(self, message: str = "Cannot perform operation on a closed account"):
+        super().__init__(status_code=400, detail=message)
