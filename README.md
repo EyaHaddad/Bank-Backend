@@ -377,7 +377,8 @@ Le `AdvancedSecurityMiddleware` fournit plusieurs couches de protection :
 | Logiciel | Version | Installation |
 |----------|---------|--------------|
 | **Python** | 3.12+ | [python.org](https://www.python.org/) |
-| **PostgreSQL** | 15+ | [postgresql.org](https://www.postgresql.org/) |
+| **Docker** | 24+ | [docker.com](https://www.docker.com/) (recommandé pour la DB) |
+| **PostgreSQL** | 15+ | [postgresql.org](https://www.postgresql.org/) (ou via Docker) |
 | **uv** | Latest | `pip install uv` |
 | **Git** | Latest | [git-scm.com](https://git-scm.com/) |
 
@@ -404,14 +405,26 @@ uv sync
 Cette commande crée automatiquement un environnement virtuel et installe toutes les dépendances.
 
 ### 4. Configurer PostgreSQL
-```sql
--- Créer la base de données
-CREATE DATABASE app_bancaire;
-CREATE USER bank_user WITH PASSWORD 'secure_password';
-GRANT ALL PRIVILEGES ON DATABASE app_bancaire TO bank_user;
+
+#### Option A: 🐳 Avec Docker (Recommandé)
+
+```bash
+# Exporter votre base locale (première fois uniquement)
+.\export-db.bat
+
+# Démarrer la base Docker
+docker compose up -d
 ```
 
-### 5. Initialiser la base de données
+> 📖 Voir [DOCKER.md](DOCKER.md) pour plus de détails.
+
+#### Option B: Installation manuelle PostgreSQL
+
+```sql
+CREATE DATABASE banking_db;
+```
+
+Puis initialisez les tables:
 ```bash
 uv run python -m src.infrastructure.database.reset
 ```
@@ -435,10 +448,13 @@ DEBUG=False
 # ═══════════════════════════════════════════════════════════
 # BASE DE DONNÉES
 # ═══════════════════════════════════════════════════════════
-DATABASE_URL=postgresql://user:password@localhost:5432/app_bancaire
-DATABASE_NAME=app_bancaire
-DATABASE_USER=bank_user
-DATABASE_PASSWORD=secure_password
+# Pour Docker (port 5432):
+DATABASE_URL=postgresql://postgres:hmd202303@localhost:5432/banking_db
+# Pour installation locale (port 5433):
+# DATABASE_URL=postgresql://postgres:hmd202303@localhost:5433/banking_db
+DATABASE_NAME=banking_db
+DATABASE_USER=postgres
+DATABASE_PASSWORD=hmd202303
 
 # ═══════════════════════════════════════════════════════════
 # AUTHENTIFICATION JWT
@@ -523,6 +539,20 @@ uv run python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 \
 | **OpenAPI** | http://localhost:8000/api/openapi.json | Schéma OpenAPI |
 
 > ⚠️ La documentation API est désactivée en production (`DEBUG=False`)
+
+### 🔑 Comptes de test
+
+Une fois la base de données Docker démarrée (`docker compose up -d`), des comptes sont déjà disponibles :
+
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| **Admin** | `eyahaddad450@gmail.com` | `AYAadmin@/2025` |
+| **Client** | `haddad.eyamail@gmail.com` | `azerty2023@AYA` |
+
+> ⚠️ **Important** : Il n'est **pas nécessaire** de créer de nouveaux comptes pour tester l'application.
+
+> 🔐 **Note sur l'Admin** : Un compte administrateur ne peut **pas** être créé via l'interface utilisateur. La création d'un admin se fait uniquement :
+> - Via le Swagger UI (`/api/docs`) avec l'endpoint `POST /api/admin/promote/{id}`
 
 ---
 

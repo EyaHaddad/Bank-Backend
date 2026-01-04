@@ -10,7 +10,8 @@ from src.models.user import User
 from src.models.account import Account
 from src.modules.users.service import UserService
 from src.modules.accounts.service import AccountService
-from .schemas import AdminAccountResponse
+from src.modules.accounts import schemas as account_schemas
+from .schemas import AdminAccountResponse, AdminAccountCreate
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +98,7 @@ def list_all_accounts(db: Session) -> List[AdminAccountResponse]:
             user_email=user.email if user else "Unknown",
             balance=account.balance,
             currency=account.currency,
+            account_type=account.account_type.value if account.account_type else "COURANT",
             status=account.status.value if account.status else "ACTIVE"
         ))
     
@@ -141,3 +143,34 @@ def update_account_balance(db: Session, account_id: UUID, new_balance: float) ->
     account = get_account_service(db).update_balance(account_id, new_balance)
     logger.info(f"Admin updated account {account_id} balance to {new_balance}")
     return account
+
+
+def create_account_for_user(db: Session, account_data: AdminAccountCreate) -> AdminAccountResponse:
+    """Create a new account for a specific user (admin only)."""
+    user_service = get_user_service(db)
+    account_service = get_account_service(db)
+    
+    # Verify user exists
+    user = user_service.get_user_by_id(account_data.user_id)
+    
+    # Create account data
+    create_data = account_schemas.AccountCreate(
+        initial_balance=account_data.initial_balance,
+        account_type=account_data.account_type
+    )
+    
+    # Create the account
+    account = account_service.create_account(account_data.user_id, create_data)
+    
+    logger.info(f"Admin created account {account.id} for user {account_data.user_id}")
+    
+    return AdminAccountResponse(
+        id=account.id,
+        user_id=account.user_id,
+        user_name=f"{user.firstname} {user.lastname}",
+        user_email=user.email,
+        balance=account.balance,
+        currency=account.currency,
+        account_type=account.account_type.value if account.account_type else "COURANT",
+        status=account.status.value if account.status else "ACTIVE"
+    )

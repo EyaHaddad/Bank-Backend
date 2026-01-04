@@ -30,15 +30,7 @@ def get_my_accounts(
     return service.list_accounts(current_user.get_uuid())
 
 
-@router.post("/", response_model=schemas.AccountResponse, status_code=status.HTTP_201_CREATED)
-def create_account(
-    account_data: schemas.AccountCreate,
-    current_user: CurrentUser,
-    service: AccountService = Depends(get_account_service)
-) -> schemas.AccountResponse:
-    """Create a new bank account for the current user."""
-    logger.info(f"Creating new account for user: {current_user.get_uuid()}")
-    return service.create_account(current_user.get_uuid(), account_data)
+# NOTE: Account creation endpoint removed - only admins can create accounts for users
 
 
 @router.get("/{account_id}", response_model=schemas.AccountResponse)

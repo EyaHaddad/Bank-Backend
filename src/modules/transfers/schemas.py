@@ -22,6 +22,32 @@ class TransferRequest(BaseModel):
     reference: Optional[str] = Field(None, max_length=100, description="Transfer reference/description")
 
 
+class TransferWithOTPRequest(BaseModel):
+    """Schema for creating a transfer with OTP verification."""
+    sender_account_id: UUID = Field(..., description="Source account ID")
+    beneficiary_id: UUID = Field(..., description="Beneficiary ID to transfer to")
+    amount: float = Field(..., gt=0, description="Transfer amount must be positive")
+    reference: Optional[str] = Field(None, max_length=100, description="Transfer reference/description")
+    otp_code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+
+
+class TransferInitiateRequest(BaseModel):
+    """Schema for initiating a transfer (generates OTP)."""
+    sender_account_id: UUID = Field(..., description="Source account ID")
+    beneficiary_id: UUID = Field(..., description="Beneficiary ID to transfer to")
+    amount: float = Field(..., gt=0, description="Transfer amount must be positive")
+    reference: Optional[str] = Field(None, max_length=100, description="Transfer reference/description")
+
+
+class TransferInitiateResponse(BaseModel):
+    """Schema for transfer initiation response."""
+    message: str
+    transfer_token: str = Field(..., description="Temporary token to confirm the transfer")
+    expires_at: datetime
+    amount: float
+    beneficiary_name: str
+
+
 class TransferResponse(BaseModel):
     """Schema for transfer response."""
     id: UUID

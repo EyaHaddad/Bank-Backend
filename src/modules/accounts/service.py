@@ -72,6 +72,7 @@ class AccountService:
             user_id=user_id,
             currency="TND",  # Always TND - Tunisian Dinar
             balance=account_data.initial_balance,
+            account_type=account_data.account_type,
         )
         self._db.add(new_account)
         self._db.commit()

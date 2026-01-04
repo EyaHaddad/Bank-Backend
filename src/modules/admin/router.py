@@ -98,6 +98,16 @@ async def list_all_accounts(
     return service.list_all_accounts(db)
 
 
+@router.post("/accounts", response_model=schemas.AdminAccountResponse, status_code=HTTP_200_OK)
+async def create_account_for_user(
+    account_data: schemas.AdminAccountCreate,
+    db: DbSession,
+    current_user: AdminUser,
+):
+    """Create a new account for a specific user. Only accessible by admins."""
+    return service.create_account_for_user(db, account_data)
+
+
 @router.post("/accounts/{account_id}/activate", response_model=schemas.AccountStatusResponse, status_code=HTTP_200_OK)
 async def activate_account(
     account_id: UUID,

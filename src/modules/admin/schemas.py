@@ -1,9 +1,16 @@
 """Admin schemas - Pydantic models for request/response."""
 
 from uuid import UUID
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from datetime import datetime
+from enum import Enum
+
+
+class AccountType(str, Enum):
+    """Enum for account type."""
+    COURANT = "COURANT"
+    EPARGNE = "EPARGNE"
 
 
 class PromoteUserRequest(BaseModel):
@@ -18,6 +25,13 @@ class PromoteUserResponse(BaseModel):
     new_role: str
 
 
+class AdminAccountCreate(BaseModel):
+    """Model for admin creating an account for a user."""
+    user_id: UUID = Field(..., description="ID of the user to create account for")
+    initial_balance: float = Field(default=0.0, ge=0, description="Initial balance for the account")
+    account_type: AccountType = Field(default=AccountType.COURANT, description="Account type (COURANT or EPARGNE)")
+
+
 class AdminAccountResponse(BaseModel):
     """Model for admin account list response with user info."""
     id: UUID
@@ -26,6 +40,7 @@ class AdminAccountResponse(BaseModel):
     user_email: str
     balance: float
     currency: str
+    account_type: str = "COURANT"
     status: str = "ACTIVE"
 
     class Config:

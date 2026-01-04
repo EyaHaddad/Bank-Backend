@@ -1,0 +1,23 @@
+services:
+  bankflow-db:
+    image: postgres:18-alpine
+    container_name: bankflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hmd202303
+      POSTGRES_DB: banking_db
+      TZ: Europe/Paris
+    ports:
+      - "5432:5432"
+    volumes:
+      - bankflow_data:/var/lib/postgresql/data
+      - ./docker/init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d banking_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  bankflow_data:

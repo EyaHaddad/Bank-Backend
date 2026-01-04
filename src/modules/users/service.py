@@ -67,6 +67,7 @@ class UserService:
                 firstname=user.firstname,
                 lastname=user.lastname,
                 email=user.email,
+                phone=user.phone,
                 role=user.role,
                 password_hash=get_password_hash(user.password),
             )
@@ -84,11 +85,13 @@ class UserService:
         """Update a user's information."""
         user = self.get_user_by_id(user_id)
 
-        if user_data.firstname:
+        if user_data.firstname is not None:
             user.firstname = user_data.firstname
-        if user_data.lastname:
+        if user_data.lastname is not None:
             user.lastname = user_data.lastname
-        if user_data.password:
+        if user_data.phone is not None:
+            user.phone = user_data.phone
+        if user_data.password is not None:
             user.password_hash = get_password_hash(user_data.password)
 
         self._db.commit()

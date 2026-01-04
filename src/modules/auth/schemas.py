@@ -11,6 +11,7 @@ class RegisterUserRequest(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
+    phone: str | None = None
     role: Role = Role.USER
     password: str
     confirm_password: str
@@ -31,6 +32,25 @@ class VerifyEmailResponse(BaseModel):
 class ResendOTPRequest(BaseModel):
     """Model for resending OTP request."""
     email: EmailStr
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Model for forgot password request."""
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """Model for reset password with OTP request."""
+    email: EmailStr
+    code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+    new_password: str = Field(..., min_length=12, description="New password (min 12 chars)")
+    confirm_password: str = Field(..., min_length=12, description="Confirm new password")
+
+
+class ResetPasswordResponse(BaseModel):
+    """Model for reset password response."""
+    success: bool
+    message: str
 
 
 class LoginUserRequest(BaseModel):

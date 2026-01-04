@@ -15,6 +15,12 @@ class AccountStatus(str, PyEnum):
     CLOSED = "CLOSED"
 
 
+class AccountType(str, PyEnum):
+    """Enum for account type."""
+    COURANT = "COURANT"   # Compte courant
+    EPARGNE = "EPARGNE"   # Compte épargne
+
+
 class Account(BaseEntity):
     """Account entity representing a bank account in the system."""
 
@@ -24,10 +30,11 @@ class Account(BaseEntity):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     balance = Column(Float, default=0.0)
     currency = Column(String, default="TND")
+    account_type = Column(Enum(AccountType), default=AccountType.COURANT, nullable=False)
     status = Column(Enum(AccountStatus), default=AccountStatus.ACTIVE, nullable=False)
 
     # Relationship to User
     user = relationship("User", back_populates="accounts")
 
     def __repr__(self) -> str:
-        return f"<Account(id={self.id}, user_id={self.user_id}, balance={self.balance}, currency={self.currency}, status={self.status})>"
+        return f"<Account(id={self.id}, user_id={self.user_id}, balance={self.balance}, currency={self.currency}, type={self.account_type}, status={self.status})>"

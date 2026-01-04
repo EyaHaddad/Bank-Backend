@@ -217,3 +217,109 @@ async def login_user_access_token(
         )
     
     return service.login_user_access_token(form_data, db)
+
+
+@router.post("/forgot-password", status_code=HTTP_200_OK)
+@limiter.limit("5/minute")
+async def forgot_password(
+    request: Request,
+    db: DbSession,
+    forgot_request: schemas.ForgotPasswordRequest
+):
+    """
+    Request a password reset OTP.
+    Sends an OTP to the user's email for password reset.
+    """
+    # Check if user exists
+    user = db.query(User).filter(User.email == forgot_request.email).first()
+    if not user:
+        # Return success even if user doesn't exist (security - don't reveal if email exists)
+        logger.warning(f"Password reset requested for non-existent email: {forgot_request.email}")
+        return {"message": "If this email exists, a password reset code has been sent."}
+    
+    # Generate and send OTP
+    try:
+        otp_service = OTPService(db)
+        otp_service.create_otp(
+            user_id=user.id,
+            purpose=OTPPurpose.PASSWORD_RESET,
+            max_attempts=3,
+            send_notification=True
+        )
+        logger.info(f"Password reset OTP sent to user {user.id}")
+    except Exception as e:
+        logger.error(f"Failed to send password reset OTP: {e}")
+    
+    return {"message": "If this email exists, a password reset code has been sent."}
+
+
+@router.post("/reset-password", response_model=schemas.ResetPasswordResponse, status_code=HTTP_200_OK)
+@limiter.limit("10/minute")
+async def reset_password(
+    request: Request,
+    db: DbSession,
+    reset_request: schemas.ResetPasswordRequest
+):
+    """
+    Reset password using OTP verification.
+    Validates the OTP and updates the user's password.
+    """
+    # Validate passwords match
+    if reset_request.new_password != reset_request.confirm_password:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Passwords do not match"
+        )
+    
+    # Validate password strength
+    if not service.validate_password(reset_request.new_password):
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 12 characters and include uppercase, lowercase, number, and special character (!@#$%^&*())"
+        )
+    
+    # Find user
+    user = db.query(User).filter(User.email == reset_request.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Invalid email or verification code"
+        )
+    
+    # Verify OTP
+    otp_service = OTPService(db)
+    result = otp_service.verify_user_otp_response(
+        user_id=user.id,
+        code=reset_request.code,
+        purpose=OTPPurpose.PASSWORD_RESET
+    )
+    
+    if not result.success:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=result.message
+        )
+    
+    # Update password
+    try:
+        user.password_hash = service.get_password_hash(reset_request.new_password)
+        db.commit()
+        
+        # Send password change notification
+        try:
+            from src.modules.notifications.service import send_password_change_notification_helper
+            send_password_change_notification_helper(db, user.id)
+        except Exception as e:
+            logger.error(f"Failed to send password change notification: {e}")
+        
+        logger.info(f"Password reset successful for user {user.id}")
+        return schemas.ResetPasswordResponse(
+            success=True,
+            message="Password reset successfully. You can now sign in with your new password."
+        )
+    except Exception as e:
+        logger.error(f"Failed to reset password: {e}")
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Failed to reset password. Please try again."
+        )

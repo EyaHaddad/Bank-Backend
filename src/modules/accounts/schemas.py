@@ -2,7 +2,13 @@
 
 from pydantic import BaseModel, Field
 from uuid import UUID
-from typing import Optional
+from enum import Enum
+
+
+class AccountType(str, Enum):
+    """Enum for account type."""
+    COURANT = "COURANT"   # Compte courant
+    EPARGNE = "EPARGNE"   # Compte épargne
 
 
 class AccountBase(BaseModel):
@@ -13,6 +19,7 @@ class AccountBase(BaseModel):
 class AccountCreate(AccountBase):
     """Schema for creating a new account."""
     initial_balance: float = Field(default=0.0, ge=0, description="Initial balance for the account")
+    account_type: AccountType = Field(default=AccountType.COURANT, description="Account type (COURANT or EPARGNE)")
 
 
 class AccountUpdate(BaseModel):
@@ -26,6 +33,8 @@ class AccountResponse(AccountBase):
     user_id: UUID
     balance: float
     currency: str = Field(default="TND", description="Currency code (always TND)")
+    account_type: str = Field(default="COURANT", description="Account type (COURANT or EPARGNE)")
+    status: str = Field(default="ACTIVE", description="Account status")
 
     model_config = {
         "from_attributes": True
