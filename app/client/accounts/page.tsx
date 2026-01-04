@@ -24,8 +24,8 @@ import {
 } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/useToast"
-import { Plus, Wallet, ArrowLeftRight, Loader2 } from "lucide-react"
-import { getMyAccounts, createAccount, transferBetweenAccounts } from "@/services/accounts.service"
+import { Wallet, ArrowLeftRight, Loader2, Landmark, PiggyBank } from "lucide-react"
+import { getMyAccounts, transferBetweenAccounts } from "@/services/accounts.service"
 import { logoutUser } from "@/services/auth.service"
 import type { Account } from "@/types/account"
 
@@ -37,14 +37,11 @@ export default function ClientAccountsPage() {
   const [error, setError] = useState<string | null>(null)
   
   // Dialog states
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showTransferDialog, setShowTransferDialog] = useState(false)
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   // Form states
-  const [newAccountCurrency, setNewAccountCurrency] = useState("USD")
-  const [initialBalance, setInitialBalance] = useState("")
   const [transferAmount, setTransferAmount] = useState("")
   const [targetAccountId, setTargetAccountId] = useState("")
 
@@ -69,32 +66,6 @@ export default function ClientAccountsPage() {
   useEffect(() => {
     fetchAccounts()
   }, [])
-
-  const handleCreateAccount = async () => {
-    try {
-      setIsSubmitting(true)
-      await createAccount({
-        currency: newAccountCurrency,
-        initial_balance: initialBalance ? parseFloat(initialBalance) : 0,
-      })
-      toast({
-        title: "Account created",
-        description: "Your new account has been created successfully",
-      })
-      setShowCreateDialog(false)
-      setNewAccountCurrency("USD")
-      setInitialBalance("")
-      fetchAccounts()
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to create account",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
 
   const openTransferDialog = (account: Account) => {
     setSelectedAccount(account)
@@ -151,12 +122,8 @@ export default function ClientAccountsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">My Accounts</h1>
-              <p className="text-sm text-muted-foreground">Manage your bank accounts</p>
+              <p className="text-sm text-muted-foreground">View your bank accounts</p>
             </div>
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Account
-            </Button>
           </div>
         </div>
 
@@ -179,17 +146,21 @@ export default function ClientAccountsPage() {
                   <Wallet className="mb-2 h-5 w-5 text-accent" />
                   <p className="text-sm font-medium text-muted-foreground">Total Balance</p>
                   <p className="text-2xl font-bold text-foreground">
-                    ${totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    {totalBalance.toLocaleString("fr-TN", { minimumFractionDigits: 2 })} TND
                   </p>
                 </div>
                 <div className="rounded-lg border border-border bg-muted/50 p-4">
-                  <p className="text-sm font-medium text-muted-foreground">Total Accounts</p>
-                  <p className="text-2xl font-bold text-foreground">{accounts.length}</p>
+                  <Landmark className="mb-2 h-5 w-5 text-accent" />
+                  <p className="text-sm font-medium text-muted-foreground">Comptes Courants</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {accounts.filter(a => a.account_type === "COURANT").length}
+                  </p>
                 </div>
                 <div className="rounded-lg border border-border bg-muted/50 p-4">
-                  <p className="text-sm font-medium text-muted-foreground">Currencies</p>
+                  <PiggyBank className="mb-2 h-5 w-5 text-accent" />
+                  <p className="text-sm font-medium text-muted-foreground">Comptes Épargne</p>
                   <p className="text-2xl font-bold text-foreground">
-                    {[...new Set(accounts.map(a => a.currency))].join(", ") || "N/A"}
+                    {accounts.filter(a => a.account_type === "EPARGNE").length}
                   </p>
                 </div>
               </div>
@@ -209,24 +180,36 @@ export default function ClientAccountsPage() {
                 <Card key={account.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Account</CardTitle>
-                      <Badge variant="outline">{account.currency}</Badge>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        {account.account_type === "EPARGNE" ? (
+                          <PiggyBank className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <Landmark className="h-5 w-5 text-blue-500" />
+                        )}
+                        {account.account_type === "EPARGNE" ? "Compte Épargne" : "Compte Courant"}
+                      </CardTitle>
+                      <Badge variant={account.account_type === "EPARGNE" ? "secondary" : "outline"}>
+                        {account.currency}
+                      </Badge>
                     </div>
                     <CardDescription>ID: {account.id.substring(0, 8)}...</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="mb-4 text-3xl font-bold text-foreground">
-                      ${account.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    <p className="mb-2 text-3xl font-bold text-foreground">
+                      {account.balance.toLocaleString("fr-TN", { minimumFractionDigits: 2 })} TND
                     </p>
+                    <Badge variant={account.status === "ACTIVE" ? "default" : "destructive"} className="mb-4">
+                      {account.status}
+                    </Badge>
                     <div className="flex flex-wrap gap-2">
-                      {accounts.length > 1 && (
+                      {accounts.length > 1 && account.status === "ACTIVE" && (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => openTransferDialog(account)}
                         >
                           <ArrowLeftRight className="mr-1 h-4 w-4" />
-                          Transfer
+                          Transférer
                         </Button>
                       )}
                     </div>
@@ -238,66 +221,20 @@ export default function ClientAccountsPage() {
         </div>
       </main>
 
-      {/* Create Account Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Account</DialogTitle>
-            <DialogDescription>Set up a new bank account</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
-              <Select value={newAccountCurrency} onValueChange={setNewAccountCurrency}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD - US Dollar</SelectItem>
-                  <SelectItem value="EUR">EUR - Euro</SelectItem>
-                  <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                  <SelectItem value="MAD">MAD - Moroccan Dirham</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="initialBalance">Initial Balance (Optional)</Label>
-              <Input
-                id="initialBalance"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={initialBalance}
-                onChange={(e) => setInitialBalance(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateAccount} disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Account"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Transfer Dialog */}
       <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Transfer Between Accounts</DialogTitle>
+            <DialogTitle>Transfert Entre Comptes</DialogTitle>
             <DialogDescription>
               {selectedAccount && (
-                <>Current balance: ${selectedAccount.balance.toFixed(2)} {selectedAccount.currency}</>
+                <>Solde actuel: {selectedAccount.balance.toFixed(2)} {selectedAccount.currency}</>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">Montant</Label>
               <Input
                 id="amount"
                 type="number"
@@ -309,17 +246,17 @@ export default function ClientAccountsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="targetAccount">Transfer To</Label>
+              <Label htmlFor="targetAccount">Transférer vers</Label>
               <Select value={targetAccountId} onValueChange={setTargetAccountId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select target account" />
+                  <SelectValue placeholder="Sélectionner un compte" />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts
-                    .filter((acc) => acc.id !== selectedAccount?.id)
+                    .filter((acc) => acc.id !== selectedAccount?.id && acc.status === "ACTIVE")
                     .map((acc) => (
                       <SelectItem key={acc.id} value={acc.id}>
-                        {acc.currency} - ${acc.balance.toFixed(2)} ({acc.id.substring(0, 8)}...)
+                        {acc.account_type === "EPARGNE" ? "Épargne" : "Courant"} - {acc.balance.toFixed(2)} TND ({acc.id.substring(0, 8)}...)
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -328,13 +265,13 @@ export default function ClientAccountsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowTransferDialog(false)}>
-              Cancel
+              Annuler
             </Button>
             <Button
               onClick={handleTransfer}
               disabled={isSubmitting || !transferAmount || !targetAccountId}
             >
-              {isSubmitting ? "Processing..." : "Confirm Transfer"}
+              {isSubmitting ? "En cours..." : "Confirmer le Transfert"}
             </Button>
           </DialogFooter>
         </DialogContent>

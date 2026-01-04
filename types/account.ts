@@ -1,7 +1,10 @@
 // Account types matching backend schemas
 
+export type AccountType = "COURANT" | "EPARGNE";
+
 export interface AccountCreate {
   initial_balance?: number;
+  account_type?: AccountType;
 }
 
 export interface AccountUpdate {
@@ -13,6 +16,8 @@ export interface Account {
   user_id: string;
   balance: number;
   currency: string; // Always "TND"
+  account_type: AccountType;
+  status: string;
 }
 
 // NOTE: DepositRequest and WithdrawRequest have been removed.

@@ -5,12 +5,40 @@ import type {
   TransferListResponse,
   TransferSummary,
   TransferFilters,
+  TransferInitiateRequest,
+  TransferInitiateResponse,
 } from "@/types/transfer";
 
 // ---------------- TRANSFERS ----------------
 
 /**
- * Create a new transfer to a beneficiary
+ * Initiate a transfer with OTP verification
+ * This sends an OTP to the user's email and returns a transfer token
+ */
+export async function initiateTransfer(
+  data: TransferInitiateRequest
+): Promise<TransferInitiateResponse> {
+  const response = await api.post<TransferInitiateResponse>("/transfers/initiate", data);
+  return response.data;
+}
+
+/**
+ * Confirm a transfer with OTP code
+ */
+export async function confirmTransfer(
+  transferToken: string,
+  otpCode: string
+): Promise<Transfer> {
+  const params = new URLSearchParams();
+  params.append("transfer_token", transferToken);
+  params.append("otp_code", otpCode);
+
+  const response = await api.post<Transfer>(`/transfers/confirm?${params.toString()}`);
+  return response.data;
+}
+
+/**
+ * Create a new transfer to a beneficiary (without OTP - legacy)
  */
 export async function createTransfer(data: TransferRequest): Promise<Transfer> {
   const response = await api.post<Transfer>("/transfers/", data);

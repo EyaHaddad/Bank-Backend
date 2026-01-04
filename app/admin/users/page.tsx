@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/useToast"
-import { UserPlus, Search, Edit, Trash2, MoreVertical, Shield, Loader2, UserCheck, UserX } from "lucide-react"
+import { Search, Edit, Trash2, MoreVertical, Shield, Loader2, UserCheck, UserX, Wallet, PlusCircle } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -28,17 +28,33 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { logoutUser } from "@/services/auth.service"
-import { listUsers, createUser, deleteUser, updateUser } from "@/services/users.service"
-import { promoteUserToAdmin, demoteAdminToUser, activateUser, deactivateUser, adminDeleteUser } from "@/services/admin.service"
-import type { User, UserCreate, UserUpdate } from "@/types/user"
+import { listUsers, updateUser } from "@/services/users.service"
+import { 
+  promoteUserToAdmin, 
+  demoteAdminToUser, 
+  activateUser, 
+  deactivateUser, 
+  adminDeleteUser,
+  createAccountForUser,
+  type AdminAccountCreate
+} from "@/services/admin.service"
+import type { User } from "@/types/user"
+import type { AccountType } from "@/types/account"
 
 export default function ManageClientsPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [showAddAccountDialog, setShowAddAccountDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -47,15 +63,11 @@ export default function ManageClientsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   
-  // Form state for adding
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [address, setAddress] = useState("")
-  const [password, setPassword] = useState("")
+  // Form state for adding account
+  const [initialBalance, setInitialBalance] = useState("")
+  const [accountType, setAccountType] = useState<AccountType>("COURANT")
   
-  // Form state for editing
+  // Form state for editing user
   const [editFirstName, setEditFirstName] = useState("")
   const [editLastName, setEditLastName] = useState("")
 
@@ -85,29 +97,26 @@ export default function ManageClientsPage() {
     router.push("/")
   }
 
-  const handleAddClient = async () => {
+  const handleAddAccount = async () => {
+    if (!selectedUser) return
     try {
       setIsSubmitting(true)
-      const newUser: UserCreate = {
-        firstname: firstName,
-        lastname: lastName,
-        email: email,
-        password: password,
-        phone: phone || undefined,
-        address: address || undefined,
+      const accountData: AdminAccountCreate = {
+        user_id: selectedUser.id,
+        initial_balance: parseFloat(initialBalance) || 0,
+        account_type: accountType,
       }
-      await createUser(newUser)
+      await createAccountForUser(accountData)
       toast({
-        title: "Client added",
-        description: "New client has been successfully added",
+        title: "Account created",
+        description: `New ${accountType.toLowerCase()} account created for ${selectedUser.firstname} ${selectedUser.lastname}`,
       })
-      setShowAddDialog(false)
-      resetForm()
-      fetchUsers()
-    } catch (error) {
+      setShowAddAccountDialog(false)
+      resetAccountForm()
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to add client",
+        description: error?.response?.data?.detail || "Failed to create account",
         variant: "destructive",
       })
     } finally {
@@ -149,6 +158,13 @@ export default function ManageClientsPage() {
     setEditFirstName(user.firstname)
     setEditLastName(user.lastname)
     setShowEditDialog(true)
+  }
+
+  const openAddAccountDialog = (user: User) => {
+    setSelectedUser(user)
+    setInitialBalance("")
+    setAccountType("COURANT")
+    setShowAddAccountDialog(true)
   }
 
   const handleEditUser = async () => {
@@ -246,13 +262,10 @@ export default function ManageClientsPage() {
     }
   }
 
-  const resetForm = () => {
-    setFirstName("")
-    setLastName("")
-    setEmail("")
-    setPhone("")
-    setAddress("")
-    setPassword("")
+  const resetAccountForm = () => {
+    setInitialBalance("")
+    setAccountType("COURANT")
+    setSelectedUser(null)
   }
 
   const filteredUsers = users.filter((user) =>
@@ -276,13 +289,9 @@ export default function ManageClientsPage() {
         <div className="border-b border-border bg-card px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Manage Clients</h1>
-              <p className="text-sm text-muted-foreground">View and manage all client accounts</p>
+              <h1 className="text-2xl font-bold text-foreground">Manage Users</h1>
+              <p className="text-sm text-muted-foreground">View users and manage their bank accounts</p>
             </div>
-            <Button onClick={() => setShowAddDialog(true)}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Client
-            </Button>
           </div>
         </div>
 
@@ -343,6 +352,15 @@ export default function ManageClientsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {user.role !== "admin" && (
+                              <>
+                                <DropdownMenuItem onClick={() => openAddAccountDialog(user)}>
+                                  <PlusCircle className="mr-2 h-4 w-4 text-green-500" />
+                                  Add Bank Account
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                              </>
+                            )}
                             <DropdownMenuItem onClick={() => openEditDialog(user)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit User
@@ -391,82 +409,60 @@ export default function ManageClientsPage() {
         </div>
       </main>
 
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      {/* Add Bank Account Dialog */}
+      <Dialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Client</DialogTitle>
-            <DialogDescription>Enter client information to create a new account</DialogDescription>
+            <DialogTitle>Create Bank Account</DialogTitle>
+            <DialogDescription>
+              {selectedUser && `Create a new bank account for ${selectedUser.firstname} ${selectedUser.lastname}`}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  placeholder="John"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  placeholder="Doe"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="accountType">Account Type</Label>
+              <Select value={accountType} onValueChange={(value: AccountType) => setAccountType(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select account type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="COURANT">
+                    <div className="flex items-center">
+                      <Wallet className="mr-2 h-4 w-4" />
+                      Compte Courant
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="EPARGNE">
+                    <div className="flex items-center">
+                      <Wallet className="mr-2 h-4 w-4" />
+                      Compte Épargne
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="initialBalance">Initial Balance (TND)</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="john.doe@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+1 (555) 123-4567"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                placeholder="123 Main St, City, State"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                id="initialBalance"
+                type="number"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                value={initialBalance}
+                onChange={(e) => setInitialBalance(e.target.value)}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+            <Button variant="outline" onClick={() => setShowAddAccountDialog(false)}>
               Cancel
             </Button>
             <Button
-              onClick={handleAddClient}
-              disabled={isSubmitting || !firstName || !lastName || !email || !password}
+              onClick={handleAddAccount}
+              disabled={isSubmitting}
             >
-              {isSubmitting ? "Adding..." : "Add Client"}
+              {isSubmitting ? "Creating..." : "Create Account"}
             </Button>
           </DialogFooter>
         </DialogContent>

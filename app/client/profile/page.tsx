@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/useToast"
 import { Loader2 } from "lucide-react"
 import { logoutUser } from "@/services/auth.service"
 import { getMyProfile, updateUser, changePassword } from "@/services/users.service"
-import type { User, UserUpdate, ChangePasswordRequest } from "@/types/user"
+import type { User, UserUpdate, PasswordChange } from "@/types/user"
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -26,7 +26,6 @@ export default function ProfilePage() {
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
-  const [address, setAddress] = useState("")
   
   // Password state
   const [currentPassword, setCurrentPassword] = useState("")
@@ -40,11 +39,10 @@ export default function ProfilePage() {
         setIsLoading(true)
         const profile = await getMyProfile()
         setUser(profile)
-        setFirstName(profile.first_name)
-        setLastName(profile.last_name)
+        setFirstName(profile.firstname)
+        setLastName(profile.lastname)
         setEmail(profile.email)
         setPhone(profile.phone || "")
-        setAddress(profile.address || "")
       } catch (error) {
         console.error("Failed to fetch profile:", error)
         toast({
@@ -70,11 +68,9 @@ export default function ProfilePage() {
     try {
       setIsSaving(true)
       const updateData: UserUpdate = {
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
+        firstname: firstName,
+        lastname: lastName,
         phone: phone || undefined,
-        address: address || undefined,
       }
       const updatedUser = await updateUser(user.id, updateData)
       setUser(updatedUser)
@@ -106,11 +102,11 @@ export default function ProfilePage() {
 
     try {
       setIsChangingPassword(true)
-      const passwordData: ChangePasswordRequest = {
+      const passwordData: PasswordChange = {
         current_password: currentPassword,
         new_password: newPassword,
       }
-      await changePassword(passwordData)
+      await changePassword(user!.id, passwordData)
       toast({
         title: "Password changed",
         description: "Your password has been updated successfully",
@@ -131,11 +127,10 @@ export default function ProfilePage() {
 
   const handleCancelEdit = () => {
     if (user) {
-      setFirstName(user.first_name)
-      setLastName(user.last_name)
+      setFirstName(user.firstname)
+      setLastName(user.lastname)
       setEmail(user.email)
       setPhone(user.phone || "")
-      setAddress(user.address || "")
     }
     setIsEditing(false)
   }
@@ -192,9 +187,10 @@ export default function ProfilePage() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={!isEditing}
+                    disabled
+                    className="bg-muted"
                   />
+                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
@@ -203,15 +199,6 @@ export default function ProfilePage() {
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
                     disabled={!isEditing}
                   />
                 </div>

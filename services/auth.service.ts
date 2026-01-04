@@ -7,7 +7,15 @@ import type {
   VerifyEmailResponse,
   ResendOTPRequest,
   ResendOTPResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from "@/types/auth";
+
+// Clés pour la gestion de session sécurisée
+const LAST_ACTIVITY_KEY = "last_activity_timestamp";
+const SESSION_MARKER_KEY = "session_active_marker";
 
 // ---------------- AUTH ----------------
 
@@ -26,6 +34,26 @@ function setAuthCookies(token: string, role: string): void {
 function clearAuthCookies(): void {
   document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+}
+
+/**
+ * Initialize session security markers
+ */
+function initializeSessionSecurity(): void {
+  if (typeof sessionStorage !== "undefined") {
+    sessionStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+    sessionStorage.setItem(SESSION_MARKER_KEY, "active");
+  }
+}
+
+/**
+ * Clear session security markers
+ */
+function clearSessionSecurity(): void {
+  if (typeof sessionStorage !== "undefined") {
+    sessionStorage.removeItem(LAST_ACTIVITY_KEY);
+    sessionStorage.removeItem(SESSION_MARKER_KEY);
+  }
 }
 
 /**
@@ -77,19 +105,43 @@ export async function loginUser(
     },
   });
 
-  // Store auth data in localStorage
+  // Store auth data in sessionStorage
   setAuthData(response.data.access_token, response.data.role);
   
   // Store auth data in cookies for middleware
   setAuthCookies(response.data.access_token, response.data.role);
 
+  // Initialize session security markers
+  initializeSessionSecurity();
+
   return response.data;
 }
 
 /**
- * Logout user - clear local storage and cookies
+ * Logout user - clear local storage, cookies, and session security
  */
 export function logoutUser(): void {
   clearAuthData();
   clearAuthCookies();
+  clearSessionSecurity();
+}
+
+/**
+ * Request password reset - sends OTP to email
+ */
+export async function forgotPassword(
+  data: ForgotPasswordRequest
+): Promise<ForgotPasswordResponse> {
+  const response = await api.post<ForgotPasswordResponse>("/auth/forgot-password", data);
+  return response.data;
+}
+
+/**
+ * Reset password using OTP verification
+ */
+export async function resetPassword(
+  data: ResetPasswordRequest
+): Promise<ResetPasswordResponse> {
+  const response = await api.post<ResetPasswordResponse>("/auth/reset-password", data);
+  return response.data;
 }

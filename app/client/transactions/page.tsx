@@ -113,16 +113,16 @@ export default function TransactionsPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="type">Transaction Type</Label>
+                  <Label htmlFor="type">Type de transaction</Label>
                   <Select value={filterType} onValueChange={setFilterType}>
                     <SelectTrigger id="type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="CREDIT">Credits</SelectItem>
-                      <SelectItem value="DEBIT">Debits</SelectItem>
-                      <SelectItem value="TRANSFER">Transfers</SelectItem>
+                      <SelectItem value="all">Tous les types</SelectItem>
+                      <SelectItem value="CREDIT">Envoyé</SelectItem>
+                      <SelectItem value="DEBIT">Reçu</SelectItem>
+                      <SelectItem value="TRANSFER">Transferts</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -162,10 +162,10 @@ export default function TransactionsPage() {
                       <div className="flex items-center gap-4">
                         <div
                           className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                            transaction.type === "CREDIT" ? "bg-accent/10" : "bg-muted"
+                            transaction.type === "DEBIT" ? "bg-accent/10" : "bg-muted"
                           }`}
                         >
-                          {transaction.type === "CREDIT" ? (
+                          {transaction.type === "DEBIT" ? (
                             <ArrowDownRight className="h-6 w-6 text-accent" />
                           ) : (
                             <ArrowUpRight className="h-6 w-6 text-foreground" />
@@ -180,7 +180,7 @@ export default function TransactionsPage() {
                               {new Date(transaction.created_at).toLocaleDateString()}
                             </p>
                             <Badge variant="outline" className="text-xs">
-                              {transaction.type}
+                              {transaction.type === "DEBIT" ? "Reçu" : "Envoyé"}
                             </Badge>
                           </div>
                         </div>
@@ -188,10 +188,10 @@ export default function TransactionsPage() {
                       <div className="text-right">
                         <p
                           className={`text-lg font-semibold ${
-                            transaction.type === "CREDIT" ? "text-accent" : "text-foreground"
+                            transaction.type === "DEBIT" ? "text-accent" : "text-foreground"
                           }`}
                         >
-                          {transaction.type === "CREDIT" ? "+" : "-"}${transaction.amount.toFixed(2)}
+                          {transaction.type === "DEBIT" ? "+" : "-"}${transaction.amount.toFixed(2)}
                         </p>
                         <Badge
                           variant={transaction.status === "COMPLETED" ? "default" : "secondary"}

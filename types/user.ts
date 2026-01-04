@@ -17,6 +17,7 @@ export interface UserCreate extends UserBase {
 export interface UserUpdate {
   firstname?: string;
   lastname?: string;
+  phone?: string;
   password?: string;
 }
 
@@ -31,7 +32,6 @@ export interface User extends UserBase {
 export interface PasswordChange {
   current_password: string;
   new_password: string;
-  new_password_confirm: string;
 }
 
 export interface PasswordChangeResponse {

@@ -266,6 +266,7 @@ export default function ManageAccountsPage() {
                     <TableHead>Account ID</TableHead>
                     <TableHead>Client Name</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Currency</TableHead>
                     <TableHead>Balance</TableHead>
                     <TableHead>Status</TableHead>
@@ -275,7 +276,7 @@ export default function ManageAccountsPage() {
                 <TableBody>
                   {filteredAccounts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                         No accounts found
                       </TableCell>
                     </TableRow>
@@ -288,10 +289,15 @@ export default function ManageAccountsPage() {
                         <TableCell>{account.user_name}</TableCell>
                         <TableCell>{account.user_email}</TableCell>
                         <TableCell>
+                          <Badge variant={account.account_type === "EPARGNE" ? "secondary" : "outline"}>
+                            {account.account_type === "EPARGNE" ? "Épargne" : "Courant"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
                           <Badge variant="outline">{account.currency}</Badge>
                         </TableCell>
                         <TableCell className="font-semibold">
-                          ${account.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          {account.balance.toLocaleString("fr-TN", { minimumFractionDigits: 2 })} TND
                         </TableCell>
                         <TableCell>
                           <Badge variant={getStatusBadgeVariant(account.status)}>

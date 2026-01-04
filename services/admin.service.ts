@@ -1,4 +1,5 @@
 import api from "./axiosInstance";
+import type { AccountType } from "@/types/account";
 
 // ---------------- ADMIN TYPES ----------------
 
@@ -15,7 +16,14 @@ export interface AdminAccount {
   user_email: string;
   balance: number;
   currency: string;
+  account_type: AccountType;
   status: string;
+}
+
+export interface AdminAccountCreate {
+  user_id: string;
+  initial_balance?: number;
+  account_type?: AccountType;
 }
 
 export interface UserStatusResponse {
@@ -80,6 +88,14 @@ export async function adminUpdateUser(userId: string, data: AdminUserUpdate): Pr
  */
 export async function listAllAccounts(): Promise<AdminAccount[]> {
   const response = await api.get<AdminAccount[]>("/admin/accounts");
+  return response.data;
+}
+
+/**
+ * Create a new account for a user (Admin only)
+ */
+export async function createAccountForUser(data: AdminAccountCreate): Promise<AdminAccount> {
+  const response = await api.post<AdminAccount>("/admin/accounts", data);
   return response.data;
 }
 

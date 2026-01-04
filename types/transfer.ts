@@ -9,6 +9,26 @@ export interface TransferRequest {
   reference?: string;
 }
 
+export interface TransferInitiateRequest {
+  sender_account_id: string;
+  beneficiary_id: string;
+  amount: number;
+  reference?: string;
+}
+
+export interface TransferInitiateResponse {
+  message: string;
+  transfer_token: string;
+  expires_at: string;
+  amount: number;
+  beneficiary_name: string;
+}
+
+export interface TransferConfirmRequest {
+  transfer_token: string;
+  otp_code: string;
+}
+
 export interface Transfer {
   id: string;
   sender_account_id: string;

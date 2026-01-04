@@ -440,18 +440,23 @@ connect-src 'self' http://localhost:8000 https://localhost:8000;
 |----------|---------|--------------|
 | **Node.js** | 18+ | [nodejs.org](https://nodejs.org/) |
 | **pnpm** (recommandé) | 8+ | `npm install -g pnpm` |
-| **npm** (alternatif) | 9+ | Inclus avec Node.js |
-| **Git** | Latest | [git-scm.com](https://git-scm.com/) |
-
-Vérification :
-```bash
-node --version   # v18.x ou supérieur
-pnpm --version   # v8.x ou supérieur
-```
+| **Backend** | - | [Bank-Backend](../Bank-Backend) doit être actif |
+| **Docker** | 24+ | [docker.com](https://docker.com) |
 
 ---
 
 ## 🚀 Installation
+
+### 0. Configurer le Backend
+
+```bash
+# Démarrer la base de données Docker
+cd Bank-Backend
+docker compose up -d
+
+# Démarrer le backend
+uv run python -m uvicorn src.main:app --reload
+```
 
 ### 1. Cloner le repository
 ```bash
@@ -469,7 +474,6 @@ NEXT_PUBLIC_APP_NAME=BankFlow
 
 ### 3. Installer les dépendances
 
-**Avec pnpm (recommandé) :**
 ```bash
 pnpm install
 ```
@@ -650,23 +654,27 @@ const api = axios.create({
 });
 ```
 
----
-
-## 🔑 Comptes de démonstration
-
-| Rôle | Email | Mot de passe |
-|------|-------|--------------|
-| **Administrateur** | `admin@example.com` | `Admin123!@#` |
-| **Client** | `client@example.com` | `Client123!@#` |
-
-> ⚠️ Comptes de test uniquement. En production, utilisez des comptes réels.
-
----
-
 ## 🔗 Projet associé
 
 Ce frontend communique avec le backend FastAPI :
 - **Backend** : [Bank-Backend](../Bank-Backend)
+
+---
+
+## 🚀 Démarrage Rapide
+
+```bash
+# 1. Base de données + Backend
+cd Bank-Backend
+docker compose up -d
+uv run python -m uvicorn src.main:app --reload
+
+# 2. Frontend (nouveau terminal)
+cd Bank-Frontend
+pnpm install && pnpm dev
+```
+
+Accéder à l'application: [http://localhost:3000](http://localhost:3000)
 
 ---
 

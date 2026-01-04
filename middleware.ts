@@ -13,7 +13,7 @@ import type { NextRequest } from "next/server";
  */
 
 // Public routes that don't require authentication
-const PUBLIC_ROUTES = ["/", "/api"];
+const PUBLIC_ROUTES = ["/", "/api", "/forgot-password"];
 
 // Routes that require admin role
 const ADMIN_ROUTES = ["/admin"];

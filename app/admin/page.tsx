@@ -180,14 +180,6 @@ export default function AdminDashboard() {
                     <Building2 className="mr-2 h-4 w-4" />
                     Manage Accounts
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start bg-transparent"
-                    onClick={() => router.push("/admin/exchange-rates")}
-                  >
-                    <TrendingUp className="mr-2 h-4 w-4" />
-                    Exchange Rates
-                  </Button>
                 </CardContent>
               </Card>
 

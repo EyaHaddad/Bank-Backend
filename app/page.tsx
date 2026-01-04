@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -365,9 +366,9 @@ export default function LoginPage() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <a href="#" className="text-accent hover:underline">
+                    <Link href="/forgot-password" className="text-muted-foreground hover:text-foreground hover:underline">
                       Forgot password?
-                    </a>
+                    </Link>
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">
